@@ -1,0 +1,2718 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>likelihood PoC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0b11;
+            --container-bg: #1a1b26;
+            --text-color: #a9b1d6;
+            --header-color: #4cdcbc;
+            --link-color: #7dcfff;
+            --code-bg: #24283b;
+            --border-color: #414868;
+            --highlight-color: #43307f;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .logo-container {
+            text-align: center;
+            padding: 20px 0 10px; /* Reduced bottom padding from 20px to 10px */
+        }
+
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 10px; /* Reduced from 20px to 10px */
+        }
+
+        .title h1 {
+            margin-top: 0; /* Add this line to remove any default top margin */
+            font-size: 3em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #93e2fa, #7831a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        h2, h3, h4, h5, h6 {
+            color: var(--header-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: 700;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(122, 162, 247, 0.5); }
+            50% { text-shadow: 0 0 20px rgb(95 64 130 / 80%); }
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: var(--highlight-color);
+            text-decoration: underline;
+        }
+
+        code {
+            background-color: #3a242b;
+            color: #f4305d;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--text-color);
+            padding: 1em;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            font-size: 0.9em;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--highlight-color);
+            padding-left: 1em;
+            margin-left: 0;
+            font-style: italic;
+            background-color: rgba(255,158,100,0.1);
+            border-radius: 0 8px 8px 0;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid var(--border-color);
+            margin: 2em 0;
+        }
+
+        .contract-info {
+            background-color: rgba(66,73,104,0.3);
+            padding: 1em;
+            border-radius: 8px;
+            margin-bottom: 1em;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .contract-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .instruction {
+            font-weight: bold;
+            color: red;
+            background-color: rgba(255,0,0,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .p code {
+            background-color: #3a242b;
+            color: #fd003a;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        /* Dracula theme for Prism.js */
+        code[class*="language-"],
+        pre[class*="language-"] {
+            color: #f8f8f2;
+            background: none;
+            text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: left;
+            white-space: pre;
+            word-spacing: normal;
+            word-break: normal;
+            word-wrap: normal;
+            line-height: 1.5;
+            -moz-tab-size: 4;
+            -o-tab-size: 4;
+            tab-size: 4;
+            -webkit-hyphens: none;
+            -moz-hyphens: none;
+            -ms-hyphens: none;
+            hyphens: none;
+        }
+        pre[class*="language-"] {
+            background: #282a36;
+            border-radius: 0.3em;
+            padding: 1em;
+            margin: .5em 0;
+            overflow: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        :not(pre) > code[class*="language-"] {
+            padding: .1em;
+            border-radius: .3em;
+            white-space: normal;
+        }
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6272a4;
+        }
+        .token.punctuation {
+            color: #f8f8f2;
+        }
+        .namespace {
+            opacity: .7;
+        }
+        .token.property,
+        .token.tag,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #ff79c6;
+        }
+        .token.boolean,
+        .token.number {
+            color: #bd93f9;
+        }
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #50fa7b;
+        }
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #f8f8f2;
+        }
+        .token.atrule,
+        .token.attr-value,
+        .token.function,
+        .token.class-name {
+            color: #f1fa8c;
+        }
+        .token.keyword {
+            color: #8be9fd;
+        }
+        .token.regex,
+        .token.important {
+            color: #ffb86c;
+        }
+        .token.important,
+        .token.bold {
+            font-weight: bold;
+        }
+        .token.italic {
+            font-style: italic;
+        }
+        .token.entity {
+            cursor: help;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="https://i.ibb.co/NLFQR7d/immunefi-logo.png" alt="immunefi-logo">
+    </div>
+    <div class="title">
+        <h1>likelihood PoC</h1>
+    </div>
+    <div class="container">
+        
+<h3>Contract : PVCShares</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x4ba75b11417faf69585c6cb403424983241aa1ee">0x4ba75b11417faf69585c6cb403424983241aa1ee</a></p>
+<pre><code class="language-solidity">function mint(uint256 _amount, bool _usdc) external {
+        require(_amount &gt;= MIN_MINT_PER_TX, &quot;Amount is too small&quot;);
+        require(_amount &lt;= MAX_MINT_PER_TX, &quot;Amount is too large&quot;);
+        require(totalSupply() + _amount &lt;= MAX_SUPPLY, &quot;Amount exceeds max supply&quot;);
+        uint256 estimatedPrice = _calculatePrice(totalSupply() - INITIAL_SUPPLY);
+        uint256 estimatedAmount = (_amount * estimatedPrice) / 1000;
+        if (_usdc == true) {
+            ERC20(USDC).transferFrom(msg.sender, OWNER, estimatedAmount);
+        }
+        if (_usdc == false) {
+            ERC20(USDT).safeTransferFrom(msg.sender, OWNER, estimatedAmount);
+        }
+        _mint(msg.sender, _amount);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_usdc == false</code></p>
+<hr />
+<h3>Contract : MQFShares</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x5d5917adf85153176798b5ff28f4773865acf7e3">0x5d5917adf85153176798b5ff28f4773865acf7e3</a></p>
+<pre><code class="language-solidity">function mint(uint256 _amount, bool _usdc) public {
+        require(_amount &gt;= MIN_MINT_PER_TX, &quot;Amount is too small&quot;);
+        require(_amount &lt;= MAX_MINT_PER_TX, &quot;Amount is too large&quot;);
+        require(totalSupply() + _amount &lt;= MAX_SUPPLY, &quot;Amount exceeds max supply&quot;);
+        if (_usdc == true) {
+            ERC20(USDC).transferFrom(msg.sender, OWNER, _amount);
+        }
+        if (_usdc == false) {
+            ERC20(USDT).safeTransferFrom(msg.sender, OWNER, _amount);
+        }
+        _mint(msg.sender, _amount);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_usdc == false</code></p>
+<hr />
+<h3>Contract : Controller</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x5a77a0167de05c959cbc08a98ccffacd16079617">0x5a77a0167de05c959cbc08a98ccffacd16079617</a></p>
+<pre><code class="language-solidity">function makeNewGame(
+        address payable _ownerWallet,
+        address payable _contractOwnerWallet,
+        uint _systemOwnerPercent,
+        uint _percentOwner,
+        uint _percentReferrer,
+        uint _percentFundDay, uint _percentFundWeek, uint _percentFundMonth, uint _percentFundYear,
+        address _myAccountToJpFund, address _myAccountToReferFund,
+        bool isMyGame
+    ) public {
+        require(_percentOwner &gt;= _percentReferrer);
+        require(_contractOwnerWallet != address(0));
+        address myGameAddress;
+        if (_percentOwner &gt; 100) {
+            _percentOwner = 100;
+        }
+        if (countContractByOwner(owner()) &gt; 0) {
+            myGameAddress = getAddressContract(owner(), indexMyGame);
+        }
+
+        if (isMyGame == true) {
+            require(myGameWhitelist[msg.sender]);
+            _myAccountToJpFund = myGameAddress;
+            _myAccountToReferFund = myGameAddress;
+            _ownerWallet = owner();
+        }
+
+        address payable newContractAddress = headsOrTails.makeNewGame(
+            _ownerWallet,
+            _contractOwnerWallet,
+                _systemOwnerPercent,
+            _percentOwner,
+            _myAccountToJpFund, _myAccountToReferFund
+        );
+
+        if (isMyGame == false) {
+            settingJpPercentNewGameContract(
+                newContractAddress, _myAccountToJpFund,
+                _percentFundDay, _percentFundWeek, _percentFundMonth, _percentFundYear
+            );
+            settingReferPercentNewGameContract(
+                newContractAddress, _myAccountToReferFund,
+                _percentReferrer
+            );
+
+            _checkNewOwner(_ownerWallet);
+            _listOfContract[msg.sender].push(newContractAddress);
+        } else {
+            _listOfContract[_ownerWallet].push(newContractAddress);
+            _listOfJoinedMyGame[msg.sender].push(newContractAddress);
+            _getSundayLottery(_ownerWallet, indexMyGame).payToMyGameContract(newContractAddress);
+        }
+
+        _ownerByContract[newContractAddress] = _ownerWallet;
+        fundsStorage.setWhitelist(newContractAddress, true);
+        referStorage.setWhitelist(newContractAddress, true);
+
+        emit MakeNewGameContract(msg.sender, newContractAddress);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isMyGame == false</code></p>
+<hr />
+<h3>Contract : Factory</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xfc9c0a4783a8d5130f604d4c72433a459a0f38ea">0xfc9c0a4783a8d5130f604d4c72433a459a0f38ea</a></p>
+<pre><code class="language-solidity">function updateSwapDurations(
+        uint256 _duration,
+        bool _is_supported
+    ) external onlyGovernance() returns (bool){
+
+        // get the initial value
+        bool initialValue = swapDurations[_duration];
+
+        // update the swapDurations mapping
+        swapDurations[_duration] = _is_supported;
+
+        // check if a swapDuration is being added
+        if (initialValue == false &amp;&amp; _is_supported == true) {
+
+            // increment the swapDurationCount
+            swapDurationCount = swapDurationCount.add(1);
+
+        }
+
+        // check if a swapDuration is being removed
+        else if (initialValue == true &amp;&amp; _is_supported == false) {
+
+            // decrement the swapDurationCount
+            swapDurationCount = swapDurationCount.sub(1);
+
+        }
+
+        return true;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>initialValue == false &amp;&amp; _is_supported == true</code></p>
+<hr />
+<h3>Contract : BZXAAVEFLASHLIQUIDATE</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xc2fadca426106ccae0448484750aca1e7a498b78">0xc2fadca426106ccae0448484750aca1e7a498b78</a></p>
+<pre><code class="language-solidity">function performTrade(bool isItEther, uint256 amount1) public returns(uint256) {
+
+
+        uint256 startingETHBalance = address(this).balance;
+        ERC20 tokenToReceive = ERC20(currentCToken);
+        uint256 startingCBalance = tokenToReceive.balanceOf(address(this));
+
+        if (isItEther == true) {
+
+        } else {
+            ERC20 bzLToken = ERC20(currentLToken);
+
+            if (bzLToken.allowance(address(this), bzx1Address) &lt;= currentMaxLiq) {
+                bzLToken.approve(bzx1Address, (currentMaxLiq * 100));
+            }
+        }
+
+        if (isItEther == false) {
+            bzx1.liquidate(currentLoanId, address(this), currentMaxLiq);
+        } else {
+            bzx1.liquidate.value(amount1)(currentLoanId, address(this), currentMaxLiq);
+        }
+
+
+
+        uint256 amountBack = 0;
+        if (address(this).balance &gt; startingETHBalance) {
+            uint256 newETH = address(this).balance - startingETHBalance;
+            wethToken.deposit.value(newETH)();
+
+
+            amountBack = performUniswap(wethAddress, currentLToken, newETH);
+        }
+        else {
+
+
+
+            uint256 difCBalance = tokenToReceive.balanceOf(address(this)) - startingCBalance;
+           require(difCBalance &gt;0, &quot;Balance of Collateral token didnt go up after swap didnt go up&quot;);
+
+
+           amountBack = performUniswap(currentCToken, currentLToken, difCBalance);
+        }
+
+        return amountBack;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isItEther == false</code></p>
+<hr />
+<h3>Contract : OasisAuctionHouse</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x1a6e04d507f19374a1480d11f07f025a902dd981">0x1a6e04d507f19374a1480d11f07f025a902dd981</a></p>
+<pre><code class="language-solidity">function createBid(uint256 _currentTokenId, bool _standing) external payable nonReentrant  onlyUnpaused {
+
+        // Query the auction state
+        IAuctionHouse.Auction memory _auction = auction;
+
+        // Check that the auction is live
+        require(_currentTokenId == _auction.tokenId, 'Bid on wrong tokenId.');
+        require(block.timestamp &lt; _auction.endTime, &quot;Auction has ended&quot;);
+        require(block.timestamp &gt; _auction.startTime, &quot;Auction has not started&quot;);
+        require(msg.value &gt;= minimumBid, &quot;Bid is too low.&quot;);
+        require(
+            msg.value &gt;= _auction.amount + ((_auction.amount * minBidIncrementPercentage) / 100),
+            &quot;Bid is too low.&quot;
+        );
+
+        // A reference to benchmark the new bid against
+        address payable lastBidder = _auction.bidder;
+
+        // Refund the previous highest bidder,
+        // if not standing bid
+        if (lastBidder != address(0) &amp;&amp; Bids[lastBidder].standing == false &amp;&amp; Bids[msg.sender].refunded == false) {
+            _safeTransferETH(lastBidder, _auction.amount);
+            Bids[lastBidder].refunded = true;
+        }
+
+        // if overbidding self, remove old bid
+        // clear standing bids from same sender
+        if (Bids[msg.sender].refunded == false) {
+            if (Bids[msg.sender].standing == true) {
+                // loop through standing bidders and remove the address
+                for (uint i = 0; i &lt; standingBidders.length; i++) {
+                    if (standingBidders[i] == msg.sender) {
+                        standingBidders[i] = standingBidders[standingBidders.length - 1];
+                        standingBidders.pop();
+                        break;
+                    }
+                }
+            }
+            _safeTransferETH(msg.sender, Bids[msg.sender].amount);
+            Bids[msg.sender].refunded = true;
+        }
+
+        Bid memory new_bid;
+        new_bid.bidder = payable(msg.sender);
+        new_bid.amount = msg.value;
+        new_bid.timestamp = block.timestamp;
+        new_bid.winner = false;
+        new_bid.refunded = false;
+        new_bid.standing = _standing;
+        Bids[msg.sender] = new_bid;
+
+        if (_standing == true) {
+            standingBidders.push(msg.sender);
+        }
+
+        // Update the auction state with the new bid bidder and the new amount
+        auction.bidder = payable(msg.sender);
+        auction.amount = msg.value;
+
+
+        // Extend the auction if the bid was received within the time buffer
+        bool extended = _auction.endTime - block.timestamp &lt; timeBuffer;
+        if (extended) {
+            auction.endTime = _auction.endTime = _auction.endTime + timeBuffer;
+            auction.extendedTime = _auction.extendedTime + timeBuffer;
+        }
+
+        emit AuctionBid(currentTokenId, msg.sender, Bids[msg.sender].amount, _standing, extended, false);
+
+        if (extended) {
+            emit AuctionExtended(currentTokenId, _auction.endTime);
+        }
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_standing == true</code></p>
+<hr />
+<h3>Contract : Standard</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xc5939f90643466693122d7a79a4189dc96096f41">0xc5939f90643466693122d7a79a4189dc96096f41</a></p>
+<pre><code class="language-solidity">function betContract(uint contractId, bool opinion, uint amount) public payable whenNotPaused returns (bool) {
+        require(TotalAmount[contractId] &gt; 0, &quot;SEER OFFICAL WARNING: Contract has not been created&quot;);
+        require(amount &gt;= minBet &amp;&amp; amount &lt;= maxBet, &quot;SEER OFFICAL WARNING: Does not meet min or max bet requirement&quot;);
+        require(msg.value &gt;= amount, &quot;SEER OFFICAL WARNING: Does not send enough ETH&quot;);
+        Contract storage _contract = contracts[contractId];
+        require(now &lt; _contract.BetEndTime, &quot;SEER OFFICAL WARNING: Contract cannot be bet anymore&quot;);
+        require(_contract.result == 0, &quot;SEER OFFICAL WARNING: Contact terminated&quot;);
+        uint timeFactor = _calculateTimeFactor(_contract.BetEndTime, _contract.StartTime);
+        if(_contract.IfPlayed[msg.sender] == true) {
+            if(opinion == true) {
+                 Bet storage _bet = _contract.PlayerToBet[msg.sender];
+                 _bet.posAmount += amount;
+                 _bet.timestamp = timeFactor;
+                 TotalSupport[contractId] += amount;
+                 TotalAmount[contractId] += amount;
+                 emit BetAdjustSuccess(msg.sender, _bet.posAmount, _bet.negAmount, timeFactor);
+            } else if (opinion == false) {
+                Bet storage _bet = _contract.PlayerToBet[msg.sender];
+                 _bet.negAmount += amount;
+                 _bet.timestamp = timeFactor;
+                 TotalOppose[contractId] += amount;
+                 TotalAmount[contractId] += amount;
+                 emit BetAdjustSuccess(msg.sender, _bet.posAmount, _bet.negAmount, timeFactor);
+            }
+        } else {
+            if(opinion == true) {
+                Bet memory _bet = Bet({
+                    posAmount: amount,
+                    negAmount: 0,
+                    timestamp: timeFactor
+                });
+                _contract.IfPlayed[msg.sender] = true;
+                _contract.PlayerToBet[msg.sender] = _bet;
+                TotalSupport[contractId] += amount;
+                TotalAmount[contractId] += amount;
+                TotalPlayers[contractId] += 1;
+                emit NewBetSuccess(msg.sender, opinion, amount, timeFactor);
+            } else if (opinion == false) {
+                Bet memory _bet = Bet({
+                    posAmount: 0,
+                    negAmount: amount,
+                    timestamp: timeFactor
+                });
+                _contract.IfPlayed[msg.sender] = true;
+                _contract.PlayerToBet[msg.sender] = _bet;
+                TotalOppose[contractId] += amount;
+                TotalAmount[contractId] += amount;
+                TotalPlayers[contractId] += 1;
+                emit NewBetSuccess(msg.sender, opinion, amount, timeFactor);
+            }
+        }
+        return true;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>opinion == false</code></p>
+<hr />
+<h3>Contract : Zapper</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x5fee3467bc3a761ab20e96750b898a4132abdeb1">0x5fee3467bc3a761ab20e96750b898a4132abdeb1</a></p>
+<pre><code class="language-solidity">function zapIn(
+        uint256 stableCoinAmount,
+        uint256 cycles,
+        uint256 archMinAmount,
+        uint256 ousdMinAmount,
+        uint16 maxSlippageAllowed,
+        address addressBaseStable,
+        bool useUserArch
+    ) external returns (uint256) {
+        // Whats needs to happen?
+        // -1) validate input
+        // 0) transfer funds from user to this address
+        // 1) figure out how much of stable goes to collateral and how much to pay as arch tokens
+        // 2) exchange stable for Arch/ Take from user wallet
+        // 3) exchange stable for OUSD
+        // 4) open position
+        // 5) return NFT to user
+
+        // get a base line of how much stable is under management on conract - should be zero but creating a new base line
+        /// validate input
+        require(stableCoinAmount &gt; 0, &quot;err:stableCoinAmount==0&quot;);
+        require(maxSlippageAllowed &lt; 1000, &quot;err:slippage&gt;999&quot;);
+        require(maxSlippageAllowed &gt; 959, &quot;err:slippage&lt;960&quot;);
+
+        // Now we apply slippage. We reduce the min of OUSD
+        // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
+        // the other way around
+        ousdMinAmount = (ousdMinAmount * maxSlippageAllowed) / 1000;
+
+        /// transfer base stable coin from user to this address
+        _transferFromSender(addressBaseStable, stableCoinAmount);
+
+        /// Setup
+        address[] memory path = _getPath(addressBaseStable);
+        uint256 collateralInBaseStableAmount = stableCoinAmount;
+        uint256 ousdAmount;
+
+        if (useUserArch == false) {
+            // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that
+            // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
+            uint256 coinsToPayForArchAmount;
+            (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+            /// since we basivally add a buffer for max stable to take, its actually a built in limit on how much slippage is allowed.
+            /// In this case up to 5%
+            uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
+            // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
+            uint256 stableUsedForArch = _uniswapRouter.swapTokensForExactTokens(
+                archMinAmount,
+                maxStableToPayForArch,
+                path,
+                address(this),
+                block.timestamp + 1 minutes
+            )[0];
+
+            /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
+            // Now spend all the remainign stable to buy OUSD
+            ousdAmount = _exchangeToOUSD(stableCoinAmount - stableUsedForArch, ousdMinAmount, addressBaseStable);
+        }
+
+        // Check if we are using existing arch tokens owned by user or buying new ones
+        if (useUserArch == true) {
+            // First, exchange ALL stable coin to OUSD
+            ousdAmount = _exchangeToOUSD(stableCoinAmount, ousdMinAmount, addressBaseStable);
+            // We are using owners arch tokens, transfer from msg.sender to address(this)
+            uint256 archToTransfer = _getArchAmountToTransferFromUser(ousdAmount, cycles);
+            require(_archToken.balanceOf(msg.sender) &gt;= archToTransfer, &quot;err:insuf user arch&quot;);
+            require(_archToken.allowance(msg.sender, address(this)) &gt;= archToTransfer, &quot;err:insuf approval arch&quot;);
+            _transferFromSender(address(_archToken), archToTransfer);
+        }
+
+        // calculate min position leverage allowed
+        uint256 minLeverageOUSD = (_paramStore.getAllowedLeverageForPosition(ousdAmount, cycles) * maxSlippageAllowed) / 1000;
+        // create position
+        uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(
+            ousdAmount,
+            cycles,
+            _archToken.balanceOf(address(this)),
+            msg.sender,
+            minLeverageOUSD
+        );
+
+        /// Return all remaining dust/tokens to user
+        _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
+
+        emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
+
+        return tokenId;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>useUserArch == false</code></p>
+<hr />
+<h3>Contract : Zapper2</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xd6a9c6c24789500c788e6047652dcd8878d8ad30">0xd6a9c6c24789500c788e6047652dcd8878d8ad30</a></p>
+<pre><code class="language-solidity">function zapIn(
+        uint256 stableCoinAmount,
+        uint256 cycles,
+        uint256 archMinAmount,
+        uint256 ousdMinAmount,
+        uint16 maxSlippageAllowed,
+        address addressBaseStable,
+        bool useUserArch
+    ) external returns (uint256) {
+        // Whats needs to happen?
+        // -1) validate input
+        // 0) transfer funds from user to this address
+        // 1) figure out how much of stable goes to collateral and how much to pay as arch tokens
+        // 2) exchange stable for Arch/ Take from user wallet
+        // 3) exchange stable for OUSD
+        // 4) open position
+        // 5) return NFT to user
+
+        /// validate input
+        require(stableCoinAmount &gt; 0, &quot;err:stableCoinAmount==0&quot;);
+        require(maxSlippageAllowed &lt; 1000, &quot;err:slippage&gt;1000&quot;);
+        require(maxSlippageAllowed &gt; 959, &quot;err:slippage&lt;980&quot;);
+
+        // Now we apply slippage. We increase the min of Arch and reduce the min of OUSD
+        // This is because we need to always have enough Arch to pay so better to have a bit less OUSD and more Arch than
+        // the other way around
+        // archMinAmount = (archMinAmount * 1000) / maxSlippageAllowed;
+        ousdMinAmount = (ousdMinAmount * maxSlippageAllowed) / 1000;
+
+        /// transfer base stable coin from user to this address
+        _transferFromSender(addressBaseStable, stableCoinAmount);
+
+        /// Setup
+        address[] memory path = _getPath(addressBaseStable);
+        uint256 collateralInBaseStableAmount = stableCoinAmount;
+
+        if (useUserArch == false) {
+            // Need to buy Arch tokens. We already know how much Arch tokens we want. We still need to know the Max in stable that
+            // we are willing to pay. For that, we're running the splitEstimate again and adding a small buffer
+            uint256 coinsToPayForArchAmount;
+            (collateralInBaseStableAmount, coinsToPayForArchAmount) = _splitStableCoinAmount(stableCoinAmount, cycles, path, addressBaseStable);
+            /// since we basivally add a buffer for max stable to take, its actually a built in limit on how much slippage is allowed.
+            /// In this case up to 5%
+            uint256 maxStableToPayForArch = (coinsToPayForArchAmount * 1000) / maxSlippageAllowed;
+            // Now swap exact archMinAmount for a maximum of maxStableToPayForArch in stable coin
+            _uniswapRouter.swapTokensForExactTokens(archMinAmount, maxStableToPayForArch, path, address(this), block.timestamp + 2 minutes);
+        }
+
+        /// Exchange OUSD from any of the 3CRV. Will revert if didn't get min amount sent (2nd parameter)
+        // Now spend all the remainign stable to buy OUSD
+        uint256 remainingStable = IERC20Upgradeable(addressBaseStable).balanceOf(address(this));
+        uint256 ousdAmount = _exchangeToOUSD(remainingStable, ousdMinAmount, addressBaseStable);
+
+        // Check if we are using existing arch tokens owned by user or buying new ones
+        if (useUserArch == true) {
+            // We are using owners arch tokens, transfer from msg.sender to address(this)
+            uint256 archToTransfer = _getArchAmountToTransferFromUser(ousdAmount, cycles);
+            // uint256 archApproval = _archToken.allowance(msg.sender, address(this));
+            // console.log(&quot;archToTransfer: %s , archMin %s, archApproved %s&quot;, archToTransfer, archMinAmount,archApproval);
+            require(_archToken.balanceOf(msg.sender) &gt;= archToTransfer, &quot;err:insuf user arch&quot;);
+            require(_archToken.allowance(msg.sender, address(this)) &gt;= archToTransfer, &quot;err:insuf approval arch&quot;);
+            _transferFromSender(address(_archToken), archToTransfer);
+        }
+
+        /// create position
+        uint256 tokenId = _levEngine.createLeveragedPositionFromZapper(ousdAmount, cycles, _archToken.balanceOf(address(this)), msg.sender);
+
+        /// Return all remaining dust/tokens to user
+        _archToken.safeTransfer(msg.sender, _archToken.balanceOf(address(this)));
+        IERC20Upgradeable(addressBaseStable).safeApprove(msg.sender, 0);
+
+        emit ZapIn(tokenId, stableCoinAmount, addressBaseStable, useUserArch);
+
+        return tokenId;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>useUserArch == false</code></p>
+<hr />
+<h3>Contract : PonziBet</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x485b224c97ad56dc5b145eafdee71a7b5163f735">0x485b224c97ad56dc5b145eafdee71a7b5163f735</a></p>
+<pre><code class="language-solidity">function enterRound(bool _bet)
+     external
+     payable
+  {
+    require(msg.value &gt;= 10000000000000000);
+    if(roundTime == uint(0) || roundTime + 30 minutes &lt;= now) {
+      endPrice = uint(0);
+      upBetRecords.length = uint(0);
+      downBetRecords.length = uint(0);
+      startPrice = pyramid.buyPrice();
+      roundTime = now;
+    }
+    if(roundTime + 15 minutes &gt; now) {
+      uint fee = msg.value.div(20);
+      uint userAmount = msg.value.sub(fee);
+      feeBalance[admin] =  feeBalance[admin].add(fee);
+      if(_bet == true) {
+        recordBet(true,userAmount);
+      }
+      else if(_bet == false) {
+        recordBet(false,userAmount);
+      }
+      lastBet[msg.sender] = now;
+    }
+    else {
+      revert();
+    }
+  }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_bet == false</code></p>
+<hr />
+<h3>Contract : BZXAAVEFLASHLIQUIDATE</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x73da1793a35c467af5798d42442c5da4a5cc782c">0x73da1793a35c467af5798d42442c5da4a5cc782c</a></p>
+<pre><code class="language-solidity">function performTrade(bool isItEther, uint256 amount1) public returns(uint256) {
+
+
+        uint256 startingETHBalance = address(this).balance;
+        ERC20 tokenToReceive = ERC20(currentCToken);
+        uint256 startingCBalance = tokenToReceive.balanceOf(address(this));
+
+        if (isItEther == true) {
+
+        } else {
+            ERC20 bzLToken = ERC20(currentLToken);
+
+            if (bzLToken.allowance(address(this), bzx1Address) &lt;= currentMaxLiq) {
+                bzLToken.approve(bzx1Address, (currentMaxLiq * 100));
+            }
+        }
+
+        if (isItEther == false) {
+            bzx1.liquidate(currentLoanId, address(this), currentMaxLiq);
+        } else {
+            bzx1.liquidate {value: amount1}(currentLoanId, address(this), currentMaxLiq);
+        }
+
+
+
+        uint256 amountBack = 0;
+        if (address(this).balance &gt; startingETHBalance) {
+            uint256 newETH = address(this).balance - startingETHBalance;
+            wethToken.deposit {value: newETH}();
+
+
+            amountBack = performUniswap(wethAddress, currentLToken, newETH);
+        }
+        else {
+
+
+
+            uint256 difCBalance = tokenToReceive.balanceOf(address(this)) - startingCBalance;
+           require(difCBalance &gt;0, &quot;Balance of Collateral token didnt go up after swap didnt go up&quot;);
+
+
+           amountBack = performUniswap(currentCToken, currentLToken, difCBalance);
+        }
+
+        return amountBack;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isItEther == false</code></p>
+<hr />
+<h3>Contract : OasisAuctionHouse</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xd322fa1e343b9866b1b729bd8374de0cff0519e2">0xd322fa1e343b9866b1b729bd8374de0cff0519e2</a></p>
+<pre><code class="language-solidity">function createBid(uint256 _currentTokenId, bool _standing) external payable nonReentrant  onlyUnpaused {
+
+        IAuctionHouse.Auction memory _auction = auction;
+        address payable lastBidder = _auction.bidder;
+        uint256 _bidAmount;
+
+        // Check that the auction is live
+        require(_currentTokenId == _auction.tokenId, 'Bid on wrong tokenId.');
+        require(block.timestamp &lt; _auction.endTime, &quot;Auction has ended&quot;);
+        require(block.timestamp &gt; _auction.startTime, &quot;Auction has not started&quot;);
+
+
+        // if not standing bid, and not current bidder: refund high bidder
+        if (lastBidder != address(0) &amp;&amp; Bids[lastBidder].standing == false &amp;&amp; Bids[lastBidder].refunded == false &amp;&amp; lastBidder != msg.sender) {
+            _safeTransferETH(lastBidder, _auction.amount);
+            Bids[lastBidder].refunded = true;
+        }
+
+        // upsert this bid
+        if (lastBidder == msg.sender || (Bids[msg.sender].standing == true &amp;&amp; Bids[msg.sender].refunded == false)) {
+            // if current high bidder or losing standing bid:  update the Bid struct
+            _bidAmount = Bids[msg.sender].amount + msg.value;
+            require(
+                (
+                    _bidAmount &gt;= _auction.amount + ((_auction.amount * minBidIncrementPercentage) / 100)
+                )
+                ||
+                (
+                    buyNowPrices[_currentTokenId] &gt; 0 &amp;&amp; _bidAmount &gt;= buyNowPrices[_currentTokenId]
+                ),
+                &quot;Bid is too low.&quot;
+            );
+            Bids[msg.sender].amount = _bidAmount;
+            Bids[msg.sender].timestamp = block.timestamp;
+            Bids[msg.sender].refunded = false;
+
+            // if bidder is changing standing status, update standingBidders array
+            if (_standing == true &amp;&amp; Bids[msg.sender].standing == false) {
+                standingBidders.push(msg.sender);
+            } else if (_standing == false &amp;&amp; Bids[msg.sender].standing == true) {
+                // loop through standing bidders and remove the address
+                for (uint i = 0; i &lt; standingBidders.length; i++) {
+                    if (standingBidders[i] == msg.sender) {
+                        standingBidders[i] = standingBidders[standingBidders.length - 1];
+                        standingBidders.pop();
+                        break;
+                    }
+                }
+            }
+            Bids[msg.sender].standing = _standing;
+
+        } else {
+            require(
+                (
+                    msg.value &gt;= _auction.amount + ((_auction.amount * minBidIncrementPercentage) / 100)
+                )
+                ||
+                (
+                    buyNowPrices[_currentTokenId] &gt; 0 &amp;&amp; msg.value &gt;= buyNowPrices[_currentTokenId]
+                ),
+                &quot;Bid is too low.&quot;
+            );
+            require(msg.value &gt;= minimumBid, &quot;Bid is too low.&quot;);
+            // else, add new bid to Bid struct
+            _bidAmount = msg.value;
+            Bid memory new_bid;
+            new_bid.bidder = payable(msg.sender);
+            new_bid.amount = _bidAmount;
+            new_bid.timestamp = block.timestamp;
+            new_bid.winner = false;
+            new_bid.refunded = false;
+            new_bid.standing = _standing;
+            Bids[msg.sender] = new_bid;
+
+            if (_standing == true) {
+                standingBidders.push(msg.sender);
+            }
+        }
+
+        // Update the auction state with the new bid bidder and the new amount
+        auction.bidder = payable(msg.sender);
+        auction.amount = _bidAmount;
+
+        // Extend the auction if the bid was received within the time buffer
+        bool extended = _auction.endTime - block.timestamp &lt; timeBuffer;
+        if (extended) {
+            auction.endTime = _auction.endTime = _auction.endTime + timeBuffer;
+            auction.extendedTime = _auction.extendedTime + timeBuffer;
+        }
+
+        emit AuctionBid(currentTokenId, msg.sender, _bidAmount, _standing, extended, false);
+
+        if (extended) {
+            emit AuctionExtended(currentTokenId, _auction.endTime);
+        }
+
+        // if this bid &gt;= buy it now price:
+        //   set duration to clsoetime -now + duration
+        //   set close time to now
+        if (buyNowPrices[_currentTokenId] &gt; 0 &amp;&amp; _bidAmount &gt;= buyNowPrices[_currentTokenId]) {
+            duration = _auction.endTime - block.timestamp + duration;
+            auction.endTime = _auction.endTime = block.timestamp;
+            emit BuyNow(_currentTokenId, msg.sender, _bidAmount);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_standing == true &amp;&amp; Bids[msg.sender].standing == false</code></p>
+<hr />
+<h3>Contract : Controller</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x5a77a0167de05c959cbc08a98ccffacd16079617">0x5a77a0167de05c959cbc08a98ccffacd16079617</a></p>
+<pre><code class="language-solidity">function makeNewGame(
+        address payable _ownerWallet,
+        address payable _contractOwnerWallet,
+        uint _systemOwnerPercent,
+        uint _percentOwner,
+        uint _percentReferrer,
+        uint _percentFundDay, uint _percentFundWeek, uint _percentFundMonth, uint _percentFundYear,
+        address _myAccountToJpFund, address _myAccountToReferFund,
+        bool isMyGame
+    ) public {
+        require(_percentOwner &gt;= _percentReferrer);
+        require(_contractOwnerWallet != address(0));
+        address myGameAddress;
+        if (_percentOwner &gt; 100) {
+            _percentOwner = 100;
+        }
+        if (countContractByOwner(owner()) &gt; 0) {
+            myGameAddress = getAddressContract(owner(), indexMyGame);
+        }
+
+        if (isMyGame == true) {
+            require(myGameWhitelist[msg.sender]);
+            _myAccountToJpFund = myGameAddress;
+            _myAccountToReferFund = myGameAddress;
+            _ownerWallet = owner();
+        }
+
+        address payable newContractAddress = headsOrTails.makeNewGame(
+            _ownerWallet,
+            _contractOwnerWallet,
+                _systemOwnerPercent,
+            _percentOwner,
+            _myAccountToJpFund, _myAccountToReferFund
+        );
+
+        if (isMyGame == false) {
+            settingJpPercentNewGameContract(
+                newContractAddress, _myAccountToJpFund,
+                _percentFundDay, _percentFundWeek, _percentFundMonth, _percentFundYear
+            );
+            settingReferPercentNewGameContract(
+                newContractAddress, _myAccountToReferFund,
+                _percentReferrer
+            );
+
+            _checkNewOwner(_ownerWallet);
+            _listOfContract[msg.sender].push(newContractAddress);
+        } else {
+            _listOfContract[_ownerWallet].push(newContractAddress);
+            _listOfJoinedMyGame[msg.sender].push(newContractAddress);
+            _getSundayLottery(_ownerWallet, indexMyGame).payToMyGameContract(newContractAddress);
+        }
+
+        _ownerByContract[newContractAddress] = _ownerWallet;
+        fundsStorage.setWhitelist(newContractAddress, true);
+        referStorage.setWhitelist(newContractAddress, true);
+
+        emit MakeNewGameContract(msg.sender, newContractAddress);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isMyGame == false</code></p>
+<hr />
+<h3>Contract : Factory</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xfc9c0a4783a8d5130f604d4c72433a459a0f38ea">0xfc9c0a4783a8d5130f604d4c72433a459a0f38ea</a></p>
+<pre><code class="language-solidity">function updateProtocols(
+        uint256 _protocol,
+        bool _is_supported
+    ) external onlyGovernance() returns (bool){
+
+        // get the initial value
+        bool initialValue = protocols[_protocol];
+
+        // update the protocols mapping
+        protocols[_protocol] = _is_supported;
+
+        // check if a protocol is being added
+        if (initialValue == false &amp;&amp; _is_supported == true) {
+
+            // increment the protocolCount
+            protocolCount = protocolCount.add(1);
+
+        }
+
+        // check if a protocol is being removed
+        else if (initialValue == true &amp;&amp; _is_supported == false) {
+
+            // decrement the protocolCount
+            protocolCount = protocolCount.sub(1);
+
+        }
+
+        return true;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>initialValue == false &amp;&amp; _is_supported == true</code></p>
+<hr />
+<h3>Contract : Factory</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xfc9c0a4783a8d5130f604d4c72433a459a0f38ea">0xfc9c0a4783a8d5130f604d4c72433a459a0f38ea</a></p>
+<pre><code class="language-solidity">function updateProtocolMarkets(
+        uint256 _protocol,
+        address _market,
+        bool _is_supported
+    ) external onlyGovernance() returns (bool){
+
+        // get the initial value
+        bool initialValue = protocolMarkets[_protocol][_market];
+
+        // update the protocolMarkets mapping
+        protocolMarkets[_protocol][_market] = _is_supported;
+
+        // check if a protocol market is being added
+        if (initialValue == false &amp;&amp; _is_supported == true) {
+
+            // increment the protocolMarketCount
+            protocolMarketCount = protocolMarketCount.add(1);
+
+        }
+
+        // check if a protocol market is being removed
+        else if (initialValue == true &amp;&amp; _is_supported == false) {
+
+            // decrement the protocolMarketCount
+            protocolMarketCount = protocolMarketCount.sub(1);
+
+        }
+
+        return true;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>initialValue == false &amp;&amp; _is_supported == true</code></p>
+<hr />
+<h3>Contract : DEX</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xfa0fb199072d4f85db4c119e6956866c98370d9a">0xfa0fb199072d4f85db4c119e6956866c98370d9a</a></p>
+<pre><code class="language-solidity">function LimitOrder(uint32 ownerId, uint32 prTrade, uint32 prBase, bool isSell, uint80 price, uint104 qty) public onlyContractUse  returns  (uint32)
+    {
+        uint32 accountId = FindOrRevertAccount();
+        require(accountId_freeze[accountId] == false);
+        uint80 lastBestPrice;
+        OrderBook storage orderBook = basePID_tradePID_orderBook[prBase][prTrade];
+        require(price != 0 &amp;&amp; price &lt;= maxPrice &amp;&amp; qty &lt;= maxQty &amp;&amp;
+            ((isSell == false &amp;&amp; prCode_productInfo[prTrade].isTradeBid == true &amp;&amp; prCode_productInfo[prBase].isTradeAsk == true)
+            || (isSell == true &amp;&amp; prCode_productInfo[prTrade].isTradeAsk == true &amp;&amp; prCode_productInfo[prBase].isTradeBid == true))
+            &amp;&amp; prCode_productInfo[prTrade].minQty &lt;= qty);
+
+        if (isSell == true)
+        {
+            price = GetNextTick(true, price, orderBook.tickSize);
+            lastBestPrice = orderBook.bestAskPrice;
+        }
+        else
+        {
+            price = GetNextTick(false, price, orderBook.tickSize);
+            lastBestPrice = orderBook.bestBidPrice;
+        }
+
+        Order memory order;
+        order.ownerId = ownerId;
+        order.isSell = isSell;
+        order.prTrade = prTrade;
+        order.prBase = prBase;
+        order.accountId = accountId;
+        order.price = price;
+        order.qty = qty;
+        //order.timestamp = uint64(now);
+
+        require (IsPossibleLimit(order));
+
+        emit NewOrder(order.prTrade, order.prBase, order.accountId, ++lastOrderId, order.isSell, order.price, order.qty, lastNewOrderId++);
+
+        //uint104 tradedQty = matchOrder(orderBook, order, lastOrderId);
+        //BalanceUpdateByLimitAfterTrade(order, qty, tradedQty);
+
+        BalanceUpdateByLimitAfterTrade(order, qty, matchOrder(orderBook, order, lastOrderId));
+
+        if (order.qty != 0)
+        {
+            uint80 priceNext;
+            uint80 price0;
+
+            if (isSell == true)
+            {
+                price0 = orderBook.bestAskPrice;
+                if (price0 == 0)
+                {
+                    orderBook.askPrice_Order[price].prevPrice = 0;
+                    orderBook.askPrice_Order[price].nextPrice = 0;
+                    orderBook.bestAskPrice = price;
+                }
+                else if(price &lt; price0)
+                {
+                    orderBook.askPrice_Order[price0].prevPrice = price;
+                    orderBook.askPrice_Order[price].prevPrice = 0;
+                    orderBook.askPrice_Order[price].nextPrice = price0;
+                    orderBook.bestAskPrice = price;
+                }
+                else if (orderBook.askPrice_Order[price].firstId == 0)// .orderN == 0)
+                {
+                    priceNext = price0;
+
+                    while (priceNext != 0 &amp;&amp; priceNext &lt; price)
+                    {
+                        price0 = priceNext;
+                        priceNext = orderBook.askPrice_Order[price0].nextPrice;
+                    }
+
+                    orderBook.askPrice_Order[price0].nextPrice = price;
+                    orderBook.askPrice_Order[price].prevPrice = price0;
+                    orderBook.askPrice_Order[price].nextPrice = priceNext;
+                    if (priceNext != 0)
+                    {
+                        orderBook.askPrice_Order[priceNext].prevPrice = price;
+                    }
+                }
+
+                OrderLink storage orderLink = orderBook.askPrice_Order[price];
+            }
+            else
+            {
+                price0 = orderBook.bestBidPrice;
+                if (price0 == 0)
+                {
+                    orderBook.bidPrice_Order[price].prevPrice = 0;
+                    orderBook.bidPrice_Order[price].nextPrice = 0;
+                    orderBook.bestBidPrice = price;
+                }
+                else if (price &gt; price0)
+                {
+                    orderBook.bidPrice_Order[price0].prevPrice = price;
+                    orderBook.bidPrice_Order[price].prevPrice = 0;
+                    orderBook.bidPrice_Order[price].nextPrice = price0;
+                    orderBook.bestBidPrice = price;
+                }
+                else if (orderBook.bidPrice_Order[price].firstId == 0)// .orderN == 0)
+                {
+                    priceNext = price0;
+
+                    while (priceNext != 0 &amp;&amp; priceNext &gt; price)
+                    {
+                        price0 = priceNext;
+                        priceNext = orderBook.bidPrice_Order[price0].nextPrice;
+                    }
+
+                    orderBook.bidPrice_Order[price0].nextPrice = price;
+                    orderBook.bidPrice_Order[price].prevPrice = price0;
+                    orderBook.bidPrice_Order[price].nextPrice = priceNext;
+                    if (priceNext != 0)
+                    {
+                        orderBook.bidPrice_Order[priceNext].prevPrice = price;
+                    }
+                }
+
+                orderLink = orderBook.bidPrice_Order[price];
+            }
+
+            if (lastOrderId != 0)
+            {
+                orderLink.id_orderList[lastOrderId].prev = orderLink.lastId;// .firstID;
+                if (orderLink.firstId != 0)
+                {
+                    orderLink.id_orderList[orderLink.lastId].next = lastOrderId;
+                }
+                else
+                {
+                    orderLink.id_orderList[lastOrderId].next = 0;
+                    orderLink.firstId = lastOrderId;
+                }
+                orderLink.lastId = lastOrderId;
+            }
+
+            //orderLink.id_orderList.Add(id, listItem);
+            //id_Order.Add(id, order);
+            //orderLink.id_orderList[lastOrderId] = listItem;
+
+            AddOpenOrder(accountId, lastOrderId);
+            //orderLink.orderN += 1;
+            id_Order[lastOrderId] = order;
+            //emit NewHogaChange(prTrade, prBase, isSell, price);
+
+        }
+
+        if (isSell == true &amp;&amp; lastBestPrice != orderBook.bestAskPrice)
+        {
+            emit NewBestBidAsk(prTrade, prBase, isSell, orderBook.bestAskPrice);
+        }
+        if (isSell == false &amp;&amp; lastBestPrice != orderBook.bestBidPrice)
+        {
+            emit NewBestBidAsk(prTrade, prBase, isSell, orderBook.bestBidPrice);
+        }
+
+        return lastOrderId;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isSell == false &amp;&amp; lastBestPrice != orderBook.bestBidPrice</code></p>
+<hr />
+<h3>Contract : DEX</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x957b80e735147696a80e69b61ab70d946e0ddd98">0x957b80e735147696a80e69b61ab70d946e0ddd98</a></p>
+<pre><code class="language-solidity">function LimitOrder(uint32 exId, uint32 prTrade, uint32 prBase, bool isSell, uint80 price, uint104 qty) public onlyContractUse  returns  (uint32)
+    {
+        uint32 accountId = FindOrRevertAccount();
+        require(accountId_freeze[accountId] == false);
+        uint80 lastBestPrice;
+        OrderBook storage orderBook = basePID_tradePID_orderBook[prBase][prTrade];
+        require(price != 0 &amp;&amp; price &lt;= maxPrice &amp;&amp; qty &lt;= maxQty &amp;&amp;
+            ((isSell == false &amp;&amp; prCode_productInfo[prTrade].isTradeBid == true &amp;&amp; prCode_productInfo[prBase].isTradeAsk == true)
+            || (isSell == true &amp;&amp; prCode_productInfo[prTrade].isTradeAsk == true &amp;&amp; prCode_productInfo[prBase].isTradeBid == true))
+            &amp;&amp; prCode_productInfo[prTrade].minQty &lt;= qty);
+
+        if (isSell == true)
+        {
+            price = GetNextTick(true, price, orderBook.tickSize);
+            lastBestPrice = orderBook.bestAskPrice;
+        }
+        else
+        {
+            price = GetNextTick(false, price, orderBook.tickSize);
+            lastBestPrice = orderBook.bestBidPrice;
+        }
+
+        Order memory order;
+        order.exId = exId;
+        order.isSell = isSell;
+        order.prTrade = prTrade;
+        order.prBase = prBase;
+        order.accountId = accountId;
+        order.price = price;
+        order.qty = qty;
+
+        require (IsPossibleLimit(order));
+
+        emit NewOrder(order.prTrade, order.prBase, order.accountId, ++lastOrderId, order.isSell, order.price, order.qty, lastNewOrderId++);
+
+        BalanceUpdateByLimitAfterTrade(order, qty, matchOrder(orderBook, order, lastOrderId));
+
+        if (order.qty != 0)
+        {
+            uint80 priceNext;
+            uint80 price0;
+
+            if (isSell == true)
+            {
+                price0 = orderBook.bestAskPrice;
+                if (price0 == 0)
+                {
+                    orderBook.askPrice_Order[price].prevPrice = 0;
+                    orderBook.askPrice_Order[price].nextPrice = 0;
+                    orderBook.bestAskPrice = price;
+                }
+                else if(price &lt; price0)
+                {
+                    orderBook.askPrice_Order[price0].prevPrice = price;
+                    orderBook.askPrice_Order[price].prevPrice = 0;
+                    orderBook.askPrice_Order[price].nextPrice = price0;
+                    orderBook.bestAskPrice = price;
+                }
+                else if (orderBook.askPrice_Order[price].firstId == 0)
+                {
+                    priceNext = price0;
+
+                    while (priceNext != 0 &amp;&amp; priceNext &lt; price)
+                    {
+                        price0 = priceNext;
+                        priceNext = orderBook.askPrice_Order[price0].nextPrice;
+                    }
+
+                    orderBook.askPrice_Order[price0].nextPrice = price;
+                    orderBook.askPrice_Order[price].prevPrice = price0;
+                    orderBook.askPrice_Order[price].nextPrice = priceNext;
+                    if (priceNext != 0)
+                    {
+                        orderBook.askPrice_Order[priceNext].prevPrice = price;
+                    }
+                }
+
+                OrderLink storage orderLink = orderBook.askPrice_Order[price];
+            }
+            else
+            {
+                price0 = orderBook.bestBidPrice;
+                if (price0 == 0)
+                {
+                    orderBook.bidPrice_Order[price].prevPrice = 0;
+                    orderBook.bidPrice_Order[price].nextPrice = 0;
+                    orderBook.bestBidPrice = price;
+                }
+                else if (price &gt; price0)
+                {
+                    orderBook.bidPrice_Order[price0].prevPrice = price;
+                    orderBook.bidPrice_Order[price].prevPrice = 0;
+                    orderBook.bidPrice_Order[price].nextPrice = price0;
+                    orderBook.bestBidPrice = price;
+                }
+                else if (orderBook.bidPrice_Order[price].firstId == 0)
+                {
+                    priceNext = price0;
+
+                    while (priceNext != 0 &amp;&amp; priceNext &gt; price)
+                    {
+                        price0 = priceNext;
+                        priceNext = orderBook.bidPrice_Order[price0].nextPrice;
+                    }
+
+                    orderBook.bidPrice_Order[price0].nextPrice = price;
+                    orderBook.bidPrice_Order[price].prevPrice = price0;
+                    orderBook.bidPrice_Order[price].nextPrice = priceNext;
+                    if (priceNext != 0)
+                    {
+                        orderBook.bidPrice_Order[priceNext].prevPrice = price;
+                    }
+                }
+
+                orderLink = orderBook.bidPrice_Order[price];
+            }
+
+            if (lastOrderId != 0)
+            {
+                orderLink.id_orderList[lastOrderId].prev = orderLink.lastId;
+                if (orderLink.firstId != 0)
+                {
+                    orderLink.id_orderList[orderLink.lastId].next = lastOrderId;
+                }
+                else
+                {
+                    orderLink.id_orderList[lastOrderId].next = 0;
+                    orderLink.firstId = lastOrderId;
+                }
+                orderLink.lastId = lastOrderId;
+            }
+
+            AddOpenOrder(accountId, lastOrderId);
+            id_Order[lastOrderId] = order;
+        }
+
+        if (isSell == true &amp;&amp; lastBestPrice != orderBook.bestAskPrice)
+        {
+            emit NewBestBidAsk(prTrade, prBase, isSell, orderBook.bestAskPrice);
+        }
+        if (isSell == false &amp;&amp; lastBestPrice != orderBook.bestBidPrice)
+        {
+            emit NewBestBidAsk(prTrade, prBase, isSell, orderBook.bestBidPrice);
+        }
+
+        return lastOrderId;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isSell == false &amp;&amp; lastBestPrice != orderBook.bestBidPrice</code></p>
+<hr />
+<h3>Contract : evaiStableCoinFund</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x17cad83c4360ae47647c3e4eca2d337d3c876391">0x17cad83c4360ae47647c3e4eca2d337d3c876391</a></p>
+<pre><code class="language-solidity">function withdraw(
+        uint32 _stakeID,
+        bool _full,
+        uint64 _withdrawAmount
+    ) external nonReentrant {
+        require(
+            stakeByID[_stakeID].ownerAddress == msg.sender,
+            &quot;Unauthorized Stake owner&quot;
+        );
+        require(stakeByID[_stakeID].active == true, &quot;Stake was settled&quot;);
+        uint256 elapsedTime = BokkyPooBahsDateTimeLibrary.diffDays(
+            uint256(stakeByID[_stakeID].startOfTerm),
+            uint256(block.timestamp)
+        );
+        uint256 totalReturns;
+        uint256 stakeReturns;
+        uint256 rewardEndTime;
+        if (elapsedTime &lt; stakeTypes[stakeByID[_stakeID].Type].bonusTerm) {
+            totalReturns = compound(
+                (stakeByID[_stakeID].evaiAmount),
+                (stakeTypes[stakeByID[_stakeID].Type].percentageReturn),
+                elapsedTime
+            );
+            stakeReturns = totalReturns - stakeByID[_stakeID].evaiAmount;
+        } else if (
+            elapsedTime == stakeTypes[stakeByID[_stakeID].Type].bonusTerm
+        ) {
+            totalReturns = (stakeByID[_stakeID].evaiAmount *
+                (stakeTypes[stakeByID[_stakeID].Type].bonusMultiplier));
+            stakeReturns = totalReturns - (stakeByID[_stakeID].evaiAmount);
+        } else if (
+            elapsedTime &gt; stakeTypes[stakeByID[_stakeID].Type].bonusTerm
+        ) {
+            uint256 daysForYearInProgress = elapsedTime.mod(
+                uint256(stakeTypes[stakeByID[_stakeID].Type].bonusTerm)
+            );
+            uint256 completedYears = (elapsedTime.sub(daysForYearInProgress))
+                .div(uint256(stakeTypes[stakeByID[_stakeID].Type].bonusTerm));
+
+            rewardEndTime = BokkyPooBahsDateTimeLibrary.addDays(
+                uint256(stakeByID[_stakeID].startOfTerm),
+                uint256(
+                    (completedYears + 1) *
+                        uint256(stakeTypes[stakeByID[_stakeID].Type].bonusTerm)
+                )
+            );
+
+            if (rewardEndTime &lt; uint256(block.timestamp)) {
+                // Calculated elapsed time again
+                elapsedTime = BokkyPooBahsDateTimeLibrary.diffDays(
+                    uint256(stakeByID[_stakeID].startOfTerm),
+                    rewardEndTime
+                );
+
+                daysForYearInProgress = elapsedTime.mod(
+                    uint256(stakeTypes[stakeByID[_stakeID].Type].bonusTerm)
+                );
+                completedYears = (elapsedTime.sub(daysForYearInProgress)).div(
+                    uint256(stakeTypes[stakeByID[_stakeID].Type].bonusTerm)
+                );
+            }
+
+            uint256 bMul = uint256(
+                stakeTypes[stakeByID[_stakeID].Type].bonusMultiplier
+            );
+
+            uint256 postBonusBalance = calculatePostBonusBalance(
+                uint256(stakeByID[_stakeID].evaiAmount),
+                completedYears,
+                bMul
+            );
+
+            uint256 pReturns = stakeTypes[stakeByID[_stakeID].Type]
+                .percentageReturn;
+
+            totalReturns = compound(
+                postBonusBalance,
+                pReturns,
+                daysForYearInProgress
+            );
+            stakeReturns = totalReturns - (stakeByID[_stakeID].evaiAmount);
+        }
+
+        if (_full == true) {
+            stakeByID[_stakeID].partialWithdrawn = false;
+            stakeByID[_stakeID].settlementAmount = uint64(totalReturns);
+            stakeByID[_stakeID].stakeReturns = uint64(stakeReturns);
+        } else {
+            require(
+                _withdrawAmount &lt;= uint64(totalReturns),
+                &quot;Amount to claim is higher than returns&quot;
+            );
+            stakeByID[_stakeID].settlementAmount = _withdrawAmount;
+        }
+
+        if (
+            _full == true &amp;&amp;
+            stakeByID[_stakeID].settlementAmount &lt;=
+            evaiToken.balanceOf(address(this))
+        ) {
+            //Update the global variables
+            currentStakedEvaiAmount -= stakeByID[_stakeID].evaiAmount;
+            totalProfitsDistrubuted += stakeByID[_stakeID].stakeReturns;
+            // set the stake attributes
+            stakeByID[_stakeID].active = false;
+            stakeByID[_stakeID].settled = true;
+            evaiTransfer(_stakeID);
+            emitWithdrawStake(_stakeID);
+        } else if (
+            _full == true &amp;&amp;
+            stakeByID[_stakeID].settlementAmount &gt;=
+            evaiToken.balanceOf(address(this))
+        ) {
+            // set the stake attributes
+            stakeByID[_stakeID].active = false;
+            emitWithdrawStake(_stakeID);
+        } else if (
+            _full == false &amp;&amp;
+            stakeByID[_stakeID].settlementAmount &lt;=
+            evaiToken.balanceOf(address(this))
+        ) {
+            // Update the global variables
+            currentStakedEvaiAmount -= stakeByID[_stakeID].evaiAmount;
+            // set the stake attributes
+            stakeByID[_stakeID].active = false;
+            stakeByID[_stakeID].partialWithdrawn = true;
+            stakeByID[_stakeID].settled = true;
+            evaiTransfer(_stakeID);
+            emitWithdrawStake(_stakeID);
+            // restake with the remaining amount
+            uint8 Type = stakeByID[_stakeID].Type;
+            uint256 reStakeAmount = totalReturns -
+                (stakeByID[_stakeID].settlementAmount);
+            reStake(uint64(reStakeAmount), Type, _stakeID);
+        } else if (
+            _full == false &amp;&amp;
+            stakeByID[_stakeID].settlementAmount &gt;=
+            evaiToken.balanceOf(address(this))
+        ) {
+            // set the stake attributes
+            stakeByID[_stakeID].active = false;
+            stakeByID[_stakeID].partialWithdrawn = true;
+            emitWithdrawStake(_stakeID);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_full == false &amp;&amp;
+            stakeByID[_stakeID].settlementAmount &lt;=
+            evaiToken.balanceOf(address(this))</code></p>
+<hr />
+<h3>Contract : AVEC</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xa3f146632faaa92fe6dcd6b403362308bf0fca9a">0xa3f146632faaa92fe6dcd6b403362308bf0fca9a</a></p>
+<pre><code class="language-solidity">function founderDeveloperMintAVEC(uint256 _founderDeveloperFee, address _toAddress, address _holdOne, address _holdTwo, address _holdThree,
+
+        uint256 _propertyValue, bytes32 _propertyUniqueID, bytes32 _mintingRequestUniqueid, bool _globalReplacement)
+
+        public
+
+        onlyFounderDevelopers(msg.sender)
+
+    {
+
+        uint256 _amountOfTokens
+        = (_propertyValue * 1e18) / 100;
+
+        if(_propertyValue == propertyvalue_[propertyOwner_[_propertyUniqueID]][_propertyUniqueID] &amp;&amp; _globalReplacement == false){
+
+        // data setup
+
+            require(members_[_toAddress] == true
+
+            &amp;&amp; _founderDeveloperFee &gt;= 20001
+
+            &amp;&amp; _founderDeveloperFee &lt;= 100000
+
+            &amp;&amp; msg.sender != _toAddress
+
+            &amp;&amp; _propertyUniqueID == workingPropertyid_[msg.sender]
+
+            &amp;&amp; _mintingRequestUniqueid == workingMintRequestid_[msg.sender]);
+
+            // add tokens to the pool
+
+            updateHoldsandSupply(_amountOfTokens);
+
+            // add to burner stockpile
+
+            tokenBalanceLedger_[whoaaddress_]
+            = tokenBalanceLedger_[whoaaddress_] + (_amountOfTokens / 50);
+
+            // credit founder developer fee
+
+            propertyBalanceLedger_[0x676c6f62616c0000000000000000000000000000000000000000000000000000][msg.sender] += (_amountOfTokens * 1000) / _founderDeveloperFee;
+
+            tokenBalanceLedger_[msg.sender]
+            = tokenBalanceLedger_[msg.sender] + (_amountOfTokens * 1000) / _founderDeveloperFee;
+
+            //credit Envelope Fee Shareholds
+
+            creditFeeSharehold(_amountOfTokens, _toAddress, _holdOne, _holdTwo, _holdThree);
+
+            // credit tech feeSharehold_    ;
+
+            uint256 _techFee
+            = (_amountOfTokens * 100) / 25000;
+
+            propertyBalanceLedger_[0x676c6f62616c0000000000000000000000000000000000000000000000000000][techaddress_]
+            += _techFee;
+
+            propertyvalue_[whoaaddress_][0x676c6f62616c0000000000000000000000000000000000000000000000000000]
+            += (_amountOfTokens * 100000000000) / 1111234581620;
+
+            tokenBalanceLedger_[techaddress_]
+            = tokenBalanceLedger_[techaddress_] + _techFee;
+
+            uint256 _whoaFees
+            = (_amountOfTokens * 100000000000000) / 2500000000000625;
+
+            uint256 _fee
+            = (_amountOfTokens * (1000 * 100000)) / (_founderDeveloperFee * 100000);
+
+            // add tokens to the _toAddress
+
+            propertyBalanceLedger_[_propertyUniqueID][_toAddress]
+            = propertyBalanceLedger_[_propertyUniqueID][_toAddress] + ((_amountOfTokens - _whoaFees)- _fee);
+
+            tokenBalanceLedger_[_toAddress]
+            = tokenBalanceLedger_[_toAddress] + ((_amountOfTokens - _whoaFees)- _fee);
+
+            mintingDepositsOf_[_toAddress]
+            += ((_amountOfTokens - _whoaFees)- _fee);
+
+            propertyGlobalBalance_[_propertyUniqueID]
+            = _whoaFees;
+
+            // whoa fee
+
+            propertyBalanceLedger_[0x676c6f62616c0000000000000000000000000000000000000000000000000000][whoaaddress_]
+            += _whoaFees - _techFee;
+
+            // fire event
+
+            emit Transfer(msg.sender, _toAddress, _amountOfTokens);
+
+        } else if(_globalReplacement == true &amp;&amp; ceva_[msg.sender] == true){
+
+            propertyBalanceLedger_[0x676c6f62616c0000000000000000000000000000000000000000000000000000][whoaaddress_]
+            += _amountOfTokens;
+
+            propertyvalue_[whoaaddress_][0x676c6f62616c0000000000000000000000000000000000000000000000000000]
+            += _amountOfTokens;
+
+            tokenBalanceLedger_[whoaaddress_]
+            += _amountOfTokens;
+
+            // fire event
+
+            emit Transfer(msg.sender, whoaaddress_, _amountOfTokens);
+
+        } else {
+
+            // fire event
+
+            _amountOfTokens
+            = 0;
+
+            emit Transfer(msg.sender, _toAddress, _amountOfTokens);
+
+        }
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_propertyValue == propertyvalue_[propertyOwner_[_propertyUniqueID]][_propertyUniqueID] &amp;&amp; _globalReplacement == false</code></p>
+<hr />
+<h3>Contract : QoneqtTokenGenerator</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xad196132fc3e40ee62980701375fc2188b01918e">0xad196132fc3e40ee62980701375fc2188b01918e</a></p>
+<pre><code class="language-solidity">constructor (string memory tokenName, string memory tokenSymbol,uint256 initialSupply,bool _liqFee, bool _burnFee,bool _Ownable,uint256 liquidityFee_,uint256 burnRate_, address _uniswapv2router){
+        address msgSender = _msgSender();
+        require(address(msgSender) != address(0) , &quot;ERC20: transfer to the zero address&quot;);
+        _owner = msgSender;
+        _name = tokenName;
+        _symbol = tokenSymbol;
+        _tTotal = initialSupply * 10 ** 18;
+        _rTotal = (MAX - (MAX % _tTotal));
+          LiqFee = _liqFee;
+          burnFee = _burnFee;
+          Ownable = _Ownable;
+         if(_liqFee == true) {
+             _liquidityFee = liquidityFee_;
+         } else if(_liqFee == false) {
+             _liquidityFee = 0;
+         }
+          if(_burnFee == true) {
+             _burnRate = burnRate_;
+         } else if(_burnFee == false) {
+             _burnRate = 0;
+         }
+       _rOwned[_msgSender()] = _rTotal;
+
+        //exclude owner and this contract from fee
+        _isExcludedFromFee[Admin()] = true;
+        _isExcludedFromFee[address(this)] = true;
+     emit Transfer(address(0), _msgSender(), _tTotal);
+        uniswapv2routeraddress = _uniswapv2router ;
+
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(uniswapv2routeraddress);
+        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
+        uniswapV2Router = _uniswapV2Router;
+        if(Ownable == true) {
+            renounceOwnershipToBurnAddress();
+        }
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_liqFee == false</code></p>
+<hr />
+<h3>Contract : ANWToken</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x7dbdd9dafdc4c1c03d67925a4f85daa398af32b0">0x7dbdd9dafdc4c1c03d67925a4f85daa398af32b0</a></p>
+<pre><code class="language-solidity">function voting(bool vote, uint256 amount) public returns (bool) {
+
+        if (_proposalList.length == 0) { // minting Proposal array is empty
+            revert(&quot;voting: proposal not active&quot;);
+        } else {
+            require(_proposalList[_proposalId]._isActive, &quot;voting: proposal not active&quot; );
+        }
+
+        if(_votes[_msgSender()][_proposalId]._amount == 0) { // if voter hasn't voted, or reduced vote to zero previously
+            require(amount &gt; 0, &quot;voting: vote amount is zero&quot; );
+        }
+        require(_proposalList[_proposalId]._votingEnds &gt; block.timestamp, &quot;voting: voting period has closed&quot;);
+        require(balanceOf(_msgSender()) &gt;= amount, &quot;voting: vote amount cannot exceed token balance&quot;);
+
+        // adjust the proposal voting balances
+        if (_votes[_msgSender()][_proposalId]._vote != vote &amp;&amp; vote == true) { // voter switched thier vote from disagree to agree
+            // subtract from disagree and add to agree
+            _proposalList[_proposalId]._disagree = _proposalList[_proposalId]._disagree.sub(_votes[_msgSender()][_proposalId]._amount);
+            _proposalList[_proposalId]._agree = _proposalList[_proposalId]._agree.add(amount);
+        } else if (_votes[_msgSender()][_proposalId]._vote != vote &amp;&amp; vote == false){ // voter switched their vote form agree to disagree
+            // subtract from agree and add to disagree
+            _proposalList[_proposalId]._agree = _proposalList[_proposalId]._agree.sub(_votes[_msgSender()][_proposalId]._amount);
+            _proposalList[_proposalId]._disagree = _proposalList[_proposalId]._disagree.add(amount);
+        } else if ( vote == true) { // voter reinforced their agree vote
+            // add to agree
+            _proposalList[_proposalId]._agree = _proposalList[_proposalId]._agree.sub(_votes[_msgSender()][_proposalId]._amount).add(amount);
+        } else { // voter reinforced their disagree vote
+            // add to disagree
+            _proposalList[_proposalId]._disagree = _proposalList[_proposalId]._disagree.sub(_votes[_msgSender()][_proposalId]._amount).add(amount);
+        }
+        // update
+        _votes[_msgSender()][_proposalId]._vote = vote;
+
+        uint256 oldAmount = _votes[_msgSender()][_proposalId]._amount;
+
+        // assign the new vote amount to this Vote
+        _votes[_msgSender()][_proposalId]._amount = amount;
+
+
+        if(oldAmount &gt; amount) { // refund excess token if vote amount reduced
+            _transfer(address(this), _msgSender(), oldAmount.sub(amount));
+        } else { // lock new tokens if vote amount increased
+            _transfer(_msgSender(), address(this), amount.sub(oldAmount));
+        }
+
+        emit Voted(_msgSender(), _proposalId, vote,  amount);
+
+        return true;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_votes[_msgSender()][_proposalId]._vote != vote &amp;&amp; vote == false</code></p>
+<hr />
+<h3>Contract : NFTInfo</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xd15c62f530b335b391f9ce3eb67d69b88f551a20">0xd15c62f530b335b391f9ce3eb67d69b88f551a20</a></p>
+<pre><code class="language-solidity">function manageHolderAddresses(bool status, address _holder) external {
+        require(
+            msg.sender == wrapperaddress || msg.sender == Owner,
+            &quot;Not Oracle/Owner!&quot;
+        );
+        if (status == true) {
+            //Add user to array!
+            (bool _isholder, ) = isHolderInArray(_holder);
+            if (!_isholder) holderaddresses.push(_holder);
+        }
+        if (status == false) {
+            (bool _isholder, uint256 s) = isHolderInArray(_holder);
+            if (_isholder) {
+                holderaddresses[s] = holderaddresses[
+                    holderaddresses.length - 1
+                ];
+                holderaddresses.pop();
+            }
+            holder[_holder] = status;
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>status == false</code></p>
+<hr />
+<h3>Contract : BetokenLogic2</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xc78d2edddd9844e9011871a8f8061f93d38f937e">0xc78d2edddd9844e9011871a8f8061f93d38f937e</a></p>
+<pre><code class="language-solidity">function signalUpgrade(bool _inSupport) public notReadyForUpgrade during(CyclePhase.Intermission) returns (bool _success) {
+    if (!__isMature()) {
+      return false;
+    }
+
+    if (upgradeSignal[cycleNumber][msg.sender] == false) {
+      if (_inSupport == true) {
+        upgradeSignal[cycleNumber][msg.sender] = true;
+        upgradeSignalStrength[cycleNumber] = upgradeSignalStrength[cycleNumber].add(getVotingWeight(msg.sender));
+      } else {
+        return false;
+      }
+    } else {
+      if (_inSupport == false) {
+        upgradeSignal[cycleNumber][msg.sender] = false;
+        upgradeSignalStrength[cycleNumber] = upgradeSignalStrength[cycleNumber].sub(getVotingWeight(msg.sender));
+      } else {
+        return false;
+      }
+    }
+    emit SignaledUpgrade(cycleNumber, msg.sender, _inSupport);
+    return true;
+  }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_inSupport == false</code></p>
+<hr />
+<h3>Contract : BetokenLogic</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xa640b43f4f25362384a10fd73ff4ca350b7cbb70">0xa640b43f4f25362384a10fd73ff4ca350b7cbb70</a></p>
+<pre><code class="language-solidity">function signalUpgrade(bool _inSupport) public returns (bool _success) {
+    if (!__isMature()) {
+      return false;
+    }
+
+    if (upgradeSignal[cycleNumber][msg.sender] == false) {
+      if (_inSupport == true) {
+        upgradeSignal[cycleNumber][msg.sender] = true;
+        upgradeSignalStrength[cycleNumber] = upgradeSignalStrength[cycleNumber].add(getVotingWeight(msg.sender));
+      } else {
+        return false;
+      }
+    } else {
+      if (_inSupport == false) {
+        upgradeSignal[cycleNumber][msg.sender] = false;
+        upgradeSignalStrength[cycleNumber] = upgradeSignalStrength[cycleNumber].sub(getVotingWeight(msg.sender));
+      } else {
+        return false;
+      }
+    }
+    emit SignaledUpgrade(cycleNumber, msg.sender, _inSupport);
+    return true;
+  }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_inSupport == false</code></p>
+<hr />
+<h3>Contract : NFTArtGenCreatorImpl</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x8dfd8220976a0445b1779e5e9d6cb0bfe7b5dadc">0x8dfd8220976a0445b1779e5e9d6cb0bfe7b5dadc</a></p>
+<pre><code class="language-solidity">function updateReveal(bool _revealed, string memory _uri)
+    external
+    override
+    onlyTeamOrOwner
+  {
+    revealed = _revealed;
+
+    if (_revealed == false) {
+      uriNotRevealed = _uri;
+    }
+
+    if (_revealed == true) {
+      bytes memory b1 = bytes(baseUri);
+      if (b1.length == 0) {
+        baseUri = _uri;
+      }
+    }
+  }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_revealed == false</code></p>
+<hr />
+<h3>Contract : EthFoundation</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x6766bd2f2c269e581504675fe4c8fdb787f8d98b">0x6766bd2f2c269e581504675fe4c8fdb787f8d98b</a></p>
+<pre><code class="language-solidity">function lockUser(address ethAddress, bool isLock)  onlyAdmin {
+
+        //require ((msg.sender == 0x8b24767bc01a8fd1969344aaaac886e8f31e905c),&quot;&quot;);
+
+        User user = userMapping[ethAddress];
+        if(isLock == true){
+            user.isLock = true;
+            userMapping[user.ethAddress] =  user;
+        }
+        else if(isLock == false){
+            user.isLock = false;
+            userMapping[user.ethAddress] =  user;
+        }
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isLock == false</code></p>
+<hr />
+<h3>Contract : SoulsDescriptor</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x6dae8a922b66225de1728bd9e5f2b7a4bdd4699b">0x6dae8a922b66225de1728bd9e5f2b7a4bdd4699b</a></p>
+<pre><code class="language-solidity">function generateTraits(uint256 tokenId, bool fullSoul) public pure returns (string memory) {
+        bytes memory hash = abi.encodePacked(bytes32(tokenId));
+
+        string memory paintingTraits = &quot;&quot;;
+
+        string memory paintingType = string(abi.encodePacked('{&quot;trait_type&quot;: &quot;Type&quot;, &quot;value&quot;: &quot;Fully Painted&quot;},'));
+        if(fullSoul == false) { paintingType = string(abi.encodePacked('{&quot;trait_type&quot;: &quot;Type&quot;, &quot;value&quot;: &quot;Sketch&quot;},'));}
+
+        (uint colour1, uint colour2, uint colour3) = generateColours(hash);
+        string memory compositionType = getColourCompositionType(toUint8(hash,2));
+        uint saturation = 60 - uint256(toUint8(hash,30))*55/255;
+
+        string memory layersTrait = &quot;&quot;;
+        uint layers;
+
+        bool colours;
+        if(toUint8(hash,22) &lt; 128 || fullSoul == true) {
+            paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Background&quot;}, {&quot;trait_type&quot;: &quot;Colour 1&quot;, &quot;value&quot;:&quot;',toString(colour1),'&quot; },'));
+            layers++;
+            colours = true;
+        }
+        if(toUint8(hash,23) &lt; 128 || fullSoul == true) { paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Frame&quot;},')); layers++; }
+        if(toUint8(hash,24) &lt; 128 || fullSoul == true) { paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Back Splash&quot;},')); layers++; }
+        if(toUint8(hash,25) &lt; 128 || fullSoul == true) { paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Body&quot;},')); layers++; }
+        if(toUint8(hash,26) &lt; 128 || fullSoul == true) {
+            paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Back Head&quot;}, {&quot;trait_type&quot;: &quot;Colour 2&quot;, &quot;value&quot;: &quot;',toString(colour2),'&quot; },'));
+            layers++;
+            colours = true;
+        }
+        if(toUint8(hash,27) &lt; 128 || fullSoul == true) {
+            paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Front Head&quot;}, {&quot;trait_type&quot;: &quot;Colour 3&quot;, &quot;value&quot;: &quot;',toString(colour3),'&quot; },'));
+            layers++;
+            colours = true;
+        }
+        if(toUint8(hash,28) &lt; 128 || fullSoul == true) { paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Rings&quot;},')); layers++; }
+        if(toUint8(hash,29) &lt; 128 || fullSoul == true) { paintingTraits = string(abi.encodePacked(paintingTraits, '{&quot;value&quot;: &quot;Eyes&quot;},')); layers++; }
+
+        layersTrait = string(abi.encodePacked('{&quot;trait_type&quot;: &quot;Layers&quot;, &quot;value&quot;: &quot;',toString(layers),'&quot;}'));
+
+        string memory colourCompositionTrait;
+        if(colours == true) { colourCompositionTrait = string(abi.encodePacked('{&quot;trait_type&quot;: &quot;Colour Composition Type&quot;, &quot;value&quot;: &quot;',compositionType,'&quot; }, {&quot;trait_type&quot;: &quot;Saturation&quot;, &quot;value&quot;: &quot;',toString(saturation),'&quot; },')); }
+
+        return string(abi.encodePacked(
+            '&quot;attributes&quot;: [',
+            paintingType,
+            colourCompositionTrait,
+            paintingTraits,
+            layersTrait,
+            ']'
+        ));
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>fullSoul == false</code></p>
+<hr />
+<h3>Contract : EthFoundation</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x4e5534770f8cdf113f06b5fdbd9d5b1fdf4d7f8e">0x4e5534770f8cdf113f06b5fdbd9d5b1fdf4d7f8e</a></p>
+<pre><code class="language-solidity">function lockUser(address ethAddress, bool isLock)  onlyAdmin {
+
+        User user = userMapping[ethAddress];
+        if(isLock == true){
+            user.isLock = true;
+            userMapping[user.ethAddress] =  user;
+        }
+        else if(isLock == false){
+            user.isLock = false;
+            userMapping[user.ethAddress] =  user;
+        }
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isLock == false</code></p>
+<hr />
+<h3>Contract : AssholeSBT</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xf067fe2481ec959ccb4d2bd5d0a58fcb238ded3d">0xf067fe2481ec959ccb4d2bd5d0a58fcb238ded3d</a></p>
+<pre><code class="language-solidity">function changePrice(bool mintOrBurn, uint256 _newPrice) external {
+        require(_admins[msg.sender], &quot;no perms&quot;);
+        if (mintOrBurn == true) {
+            contractData.mintPrice = _newPrice;
+            emit PriceChange(&quot;mint&quot;, _newPrice);
+        }
+        if (mintOrBurn == false) {
+            contractData.burnPrice = _newPrice;
+            emit PriceChange(&quot;burn&quot;, _newPrice);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>mintOrBurn == false</code></p>
+<hr />
+<h3>Contract : Factory</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x74316a600b3c02499a9921ec50802c1940c2b083">0x74316a600b3c02499a9921ec50802c1940c2b083</a></p>
+<pre><code class="language-solidity">function updateSwapDurations(
+        uint256 _duration,
+        bool _is_supported
+    ) external onlyGovernance() returns(bool){
+
+        // get the initial value
+        bool initialValue = swapDurations[_duration];
+
+        // update the swapDurations mapping
+        swapDurations[_duration] = _is_supported;
+
+        // check if a swapDuration is being added
+        if (initialValue == false &amp;&amp; _is_supported == true) {
+
+            // increment the swapDurationCount
+            swapDurationCount = swapDurationCount.add(1);
+
+        }
+
+        // check if a swapDuration is being removed
+        else if (initialValue == true &amp;&amp; _is_supported == false) {
+
+            // decrement the swapDurationCount
+            swapDurationCount = swapDurationCount.sub(1);
+
+        }
+
+        return true;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>initialValue == false &amp;&amp; _is_supported == true</code></p>
+<hr />
+<h3>Contract : Factory</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x74316a600b3c02499a9921ec50802c1940c2b083">0x74316a600b3c02499a9921ec50802c1940c2b083</a></p>
+<pre><code class="language-solidity">function updateProtocols(
+        uint256 _protocol,
+        bool _is_supported
+    ) external onlyGovernance() returns(bool){
+
+        // get the initial value
+        bool initialValue = protocols[_protocol];
+
+        // update the protocols mapping
+        protocols[_protocol] = _is_supported;
+
+        // check if a protocol is being added
+        if (initialValue == false &amp;&amp; _is_supported == true) {
+
+            // increment the protocolCount
+            protocolCount = protocolCount.add(1);
+
+        }
+
+        // check if a protocol is being removed
+        else if (initialValue == true &amp;&amp; _is_supported == false) {
+
+            // decrement the protocolCount
+            protocolCount = protocolCount.sub(1);
+
+        }
+
+        return true;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>initialValue == false &amp;&amp; _is_supported == true</code></p>
+<hr />
+<h3>Contract : Factory</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x74316a600b3c02499a9921ec50802c1940c2b083">0x74316a600b3c02499a9921ec50802c1940c2b083</a></p>
+<pre><code class="language-solidity">function updateProtocolMarkets(
+        uint256 _protocol,
+        address _market,
+        bool _is_supported
+    ) external onlyGovernance() returns(bool){
+
+        // get the initial value
+        bool initialValue = protocolMarkets[_protocol][_market];
+
+        // update the protocolMarkets mapping
+        protocolMarkets[_protocol][_market] = _is_supported;
+
+        // check if a protocol market is being added
+        if (initialValue == false &amp;&amp; _is_supported == true) {
+
+            // increment the protocolMarketCount
+            protocolMarketCount = protocolMarketCount.add(1);
+
+        }
+
+        // check if a protocol market is being removed
+        else if (initialValue == true &amp;&amp; _is_supported == false) {
+
+            // decrement the protocolMarketCount
+            protocolMarketCount = protocolMarketCount.sub(1);
+
+        }
+
+        return true;
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>initialValue == false &amp;&amp; _is_supported == true</code></p>
+<hr />
+<h3>Contract : FMTAToken</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xaa9d866666c2a3748d6b23ff69e63e52f08d9ab4">0xaa9d866666c2a3748d6b23ff69e63e52f08d9ab4</a></p>
+<pre><code class="language-solidity">function setPaused(bool _paused) external {
+        require(hasRole(_ADMIN, msg.sender),&quot;Fundamenta: Message Sender must be _ADMIN&quot;);
+        paused = _paused;
+        if (_paused == true) {
+            emit ContractPaused (block.number, msg.sender);
+        } else if (_paused == false) {
+            emit ContractUnpaused (block.number, msg.sender);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_paused == false</code></p>
+<hr />
+<h3>Contract : FMTAToken</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xaa9d866666c2a3748d6b23ff69e63e52f08d9ab4">0xaa9d866666c2a3748d6b23ff69e63e52f08d9ab4</a></p>
+<pre><code class="language-solidity">function disableMint(bool _disableMinting) external {
+        require(hasRole(_ADMIN, msg.sender),&quot;Fundamenta: Message Sender must be _ADMIN&quot;);
+        mintDisabled = _disableMinting;
+        if (_disableMinting == true){
+            emit MintingDisabled (block.number, msg.sender);
+        }  else if (_disableMinting == false) {
+            emit MintingEnabled (block.number, msg.sender);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_disableMinting == false</code></p>
+<hr />
+<h3>Contract : FMTAToken</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xaa9d866666c2a3748d6b23ff69e63e52f08d9ab4">0xaa9d866666c2a3748d6b23ff69e63e52f08d9ab4</a></p>
+<pre><code class="language-solidity">function disableMintTo(bool _disableMintTo) external {
+        require(hasRole(_ADMIN, msg.sender),&quot;Fundamenta: Message Sender must be _ADMIN&quot;);
+        mintToDisabled = _disableMintTo;
+        if (_disableMintTo == true) {
+            emit MintingToDisabled (block.number, msg.sender);
+        } else if (_disableMintTo == false) {
+            emit MintingToEnabled (block.number, msg.sender);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_disableMintTo == false</code></p>
+<hr />
+<h3>Contract : subscription</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x7a77313334e663f4fb4e9da04b66c0a1ab11e60d">0x7a77313334e663f4fb4e9da04b66c0a1ab11e60d</a></p>
+<pre><code class="language-solidity">function payUSDC(string memory _id, bool _world ) external returns(bool) {
+        address to;
+        if (_world == true) {to = forward;} else if (_world == false) {to = forwardUSA;} else {revert();}
+        IERC20(USDC).transferFrom(msg.sender, to, priceStable);
+        emit Payment(&quot;USDC&quot;, priceStable, _id, msg.sender, to);
+        return true;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_world == false</code></p>
+<hr />
+<h3>Contract : subscription</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x7a77313334e663f4fb4e9da04b66c0a1ab11e60d">0x7a77313334e663f4fb4e9da04b66c0a1ab11e60d</a></p>
+<pre><code class="language-solidity">function payUSDT(string memory _id, bool _world) external returns(bool) {
+        address to;
+        if (_world == true) {to = forward;} else if (_world == false) {to = forwardUSA;} else {revert();}
+        IERC20(USDT).transferFrom(msg.sender, to, priceStable);
+        emit Payment(&quot;USDT&quot;, priceStable, _id, msg.sender, to);
+        return true;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_world == false</code></p>
+<hr />
+<h3>Contract : subscription</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x7a77313334e663f4fb4e9da04b66c0a1ab11e60d">0x7a77313334e663f4fb4e9da04b66c0a1ab11e60d</a></p>
+<pre><code class="language-solidity">function payETH(string memory _id, bool _world) external payable returns(bool) {
+        address to;
+        if (_world == true) {to = forward;} else if (_world == false) {to = forwardUSA;} else {revert();}
+        require(msg.value &gt;= priceETH, &quot;Dev: invalid amount&quot;);
+        (bool sent, bytes memory data) = to.call{value: msg.value}(&quot;&quot;);
+        require(sent, &quot;Dev: Ether payment error&quot;);
+        emit Payment(&quot;ETH&quot;, msg.value, _id, msg.sender, to);
+        return true;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_world == false</code></p>
+<hr />
+<h3>Contract : MultiSigWallet</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xddd55deabc5451b32bab4a275226991388888888">0xddd55deabc5451b32bab4a275226991388888888</a></p>
+<pre><code class="language-solidity">function signTransaction(uint transactionId, bool isCall) public isManager{
+        Transaction storage transaction = transactions[transactionId];
+
+        Transaction storage txn = transactions[transactionId];
+
+        require(0x0 != transaction.from);
+        require(msg.sender != transaction.from,&quot;sender  dont need&quot;);
+        require(transaction.signatures[msg.sender]!=1,&quot;signed yet&quot;);
+        transaction.signatures[msg.sender] = 1;
+        transaction.signatureCount++;
+
+
+        if(transaction.signatureCount &gt;= MIN_SIGNATURES &amp;&amp; isCall == false ){
+            //require(address(this).balance &gt;= transaction.amount);
+            //address(uint160((transaction.to))).transfer(transaction.amount);
+
+            //bytes4 callid=bytes4(keccak256(&quot;transferFrom(address,address,uint256)&quot;));
+            bytes4 callid=bytes4(keccak256(&quot;transfer(address,uint256)&quot;));
+            transaction.token.call(callid,transaction.to,transaction.amount);
+
+            emit TransferFunds(transaction.token,transaction.to, transaction.amount);
+            transaction.executed=true;
+        }
+
+
+         if(transaction.signatureCount &gt;= MIN_SIGNATURES &amp;&amp; isCall == true ){
+
+            if (external_call(txn.to, txn.amount, txn.data.length, txn.data)) {
+
+            //if (transaction.to.call(bytes4(keccak256(txn.data)),transaction.from,transaction.amount)) {
+
+                emit CallTransactions(transaction.from,transaction.amount, transaction.data);
+                transaction.executed=true;
+            }
+            else {
+                transaction.executed=false;
+
+            }
+
+            }
+
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>transaction.signatureCount &gt;= MIN_SIGNATURES &amp;&amp; isCall == false</code></p>
+<hr />
+<h3>Contract : Manifesto</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x0f45a43b72a86c22f3f1f0783ea9f162ff71e3c9">0x0f45a43b72a86c22f3f1f0783ea9f162ff71e3c9</a></p>
+<pre><code class="language-solidity">function visible (address lawless, bool state) public {
+        require(msg.sender == lawless
+                || isApprovedForAll[lawless][msg.sender]
+                || (dc.checkDelegateForContract(msg.sender, lawless, address(this))),
+                &quot;unauthorized representative&quot;);
+        if (Signers[lawless].visible) {
+            if (state == false) {
+                Signers[lawless].visible = false;
+                emit TransferSingle(msg.sender, lawless, address(0), 0, 1);
+            }
+        } else if (Signers[lawless].signed &gt; 0) {
+            if (state == true) {
+                Signers[lawless].visible = true;
+                emit TransferSingle(msg.sender, address(0), lawless, 0, 1);
+            }
+        } else {
+            revert (&quot;not lawless&quot;);
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>state == false</code></p>
+<hr />
+<h3>Contract : DEX</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xd5ad2e51b4ccdc949067c73767819477e3a129fb">0xd5ad2e51b4ccdc949067c73767819477e3a129fb</a></p>
+<pre><code class="language-solidity">function LimitOrder(uint32 exId, uint32 prTrade, uint32 prBase, bool isSell, uint80 price, uint104 qty) public onlyContractUse  returns  (uint32)
+    {
+        uint32 accountId = FindOrRevertAccount();
+        require(accountId_freeze[accountId] == false);
+        uint80 lastBestPrice;
+        OrderBook storage orderBook = basePID_tradePID_orderBook[prBase][prTrade];
+        require(price != 0 &amp;&amp; price &lt;= maxPrice &amp;&amp; qty &lt;= maxQty &amp;&amp;
+            ((isSell == false &amp;&amp; prCode_productInfo[prTrade].isTradeBid == true &amp;&amp; prCode_productInfo[prBase].isTradeAsk == true)
+            || (isSell == true &amp;&amp; prCode_productInfo[prTrade].isTradeAsk == true &amp;&amp; prCode_productInfo[prBase].isTradeBid == true))
+            &amp;&amp; prCode_productInfo[prTrade].minQty &lt;= qty);
+
+        if (isSell == true)
+        {
+            price = GetNextTick(true, price, orderBook.tickSize);
+            lastBestPrice = orderBook.bestAskPrice;
+        }
+        else
+        {
+            price = GetNextTick(false, price, orderBook.tickSize);
+            lastBestPrice = orderBook.bestBidPrice;
+        }
+
+        Order memory order;
+        order.exId = exId;
+        order.isSell = isSell;
+        order.prTrade = prTrade;
+        order.prBase = prBase;
+        order.accountId = accountId;
+        order.price = price;
+        order.qty = qty;
+
+        require (IsPossibleLimit(exId, order));
+
+        emit NewOrder(order.prTrade, order.prBase, order.accountId, ++lastOrderId, order.isSell, order.price, order.qty, lastNewOrderId++);
+
+        BalanceUpdateByLimitAfterTrade(order, qty, matchOrder(orderBook, order, lastOrderId));
+
+        if (order.qty != 0)
+        {
+            uint80 priceNext;
+            uint80 price0;
+
+            if (isSell == true)
+            {
+                price0 = orderBook.bestAskPrice;
+                if (price0 == 0)
+                {
+                    orderBook.askPrice_Order[price].prevPrice = 0;
+                    orderBook.askPrice_Order[price].nextPrice = 0;
+                    orderBook.bestAskPrice = price;
+                }
+                else if(price &lt; price0)
+                {
+                    orderBook.askPrice_Order[price0].prevPrice = price;
+                    orderBook.askPrice_Order[price].prevPrice = 0;
+                    orderBook.askPrice_Order[price].nextPrice = price0;
+                    orderBook.bestAskPrice = price;
+                }
+                else if (orderBook.askPrice_Order[price].firstId == 0)
+                {
+                    priceNext = price0;
+
+                    while (priceNext != 0 &amp;&amp; priceNext &lt; price)
+                    {
+                        price0 = priceNext;
+                        priceNext = orderBook.askPrice_Order[price0].nextPrice;
+                    }
+
+                    orderBook.askPrice_Order[price0].nextPrice = price;
+                    orderBook.askPrice_Order[price].prevPrice = price0;
+                    orderBook.askPrice_Order[price].nextPrice = priceNext;
+                    if (priceNext != 0)
+                    {
+                        orderBook.askPrice_Order[priceNext].prevPrice = price;
+                    }
+                }
+
+                OrderLink storage orderLink = orderBook.askPrice_Order[price];
+            }
+            else
+            {
+                price0 = orderBook.bestBidPrice;
+                if (price0 == 0)
+                {
+                    orderBook.bidPrice_Order[price].prevPrice = 0;
+                    orderBook.bidPrice_Order[price].nextPrice = 0;
+                    orderBook.bestBidPrice = price;
+                }
+                else if (price &gt; price0)
+                {
+                    orderBook.bidPrice_Order[price0].prevPrice = price;
+                    orderBook.bidPrice_Order[price].prevPrice = 0;
+                    orderBook.bidPrice_Order[price].nextPrice = price0;
+                    orderBook.bestBidPrice = price;
+                }
+                else if (orderBook.bidPrice_Order[price].firstId == 0)
+                {
+                    priceNext = price0;
+
+                    while (priceNext != 0 &amp;&amp; priceNext &gt; price)
+                    {
+                        price0 = priceNext;
+                        priceNext = orderBook.bidPrice_Order[price0].nextPrice;
+                    }
+
+                    orderBook.bidPrice_Order[price0].nextPrice = price;
+                    orderBook.bidPrice_Order[price].prevPrice = price0;
+                    orderBook.bidPrice_Order[price].nextPrice = priceNext;
+                    if (priceNext != 0)
+                    {
+                        orderBook.bidPrice_Order[priceNext].prevPrice = price;
+                    }
+                }
+
+                orderLink = orderBook.bidPrice_Order[price];
+            }
+
+            if (lastOrderId != 0)
+            {
+                orderLink.id_orderList[lastOrderId].prev = orderLink.lastId;
+                if (orderLink.firstId != 0)
+                {
+                    orderLink.id_orderList[orderLink.lastId].next = lastOrderId;
+                }
+                else
+                {
+                    orderLink.id_orderList[lastOrderId].next = 0;
+                    orderLink.firstId = lastOrderId;
+                }
+                orderLink.lastId = lastOrderId;
+            }
+
+            AddOpenOrder(accountId, lastOrderId);
+            id_Order[lastOrderId] = order;
+        }
+
+        if (isSell == true &amp;&amp; lastBestPrice != orderBook.bestAskPrice)
+        {
+            emit NewBestBidAsk(prTrade, prBase, isSell, orderBook.bestAskPrice);
+        }
+        if (isSell == false &amp;&amp; lastBestPrice != orderBook.bestBidPrice)
+        {
+            emit NewBestBidAsk(prTrade, prBase, isSell, orderBook.bestBidPrice);
+        }
+
+        return lastOrderId;
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isSell == false &amp;&amp; lastBestPrice != orderBook.bestBidPrice</code></p>
+<hr />
+<h3>Contract : Bills</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xe979c1dbcf46b9935e2a46e76a4b64765edd1a9d">0xe979c1dbcf46b9935e2a46e76a4b64765edd1a9d</a></p>
+<pre><code class="language-solidity">function ModerateBill(uint BoardIdToModerate, bool Published) onlyModerator isICOend public
+    {
+        var Advr = info[BoardIdToModerate];
+
+        require(Advr.BoardId == BoardIdToModerate &amp;&amp; BoardIdToModerate &gt; 0);
+
+        if(Published == true)
+        {
+            require(keccak256(Advr.Status) == keccak256(&quot;Moderate&quot;));
+
+            uint CompensateTime   = now - Advr.AddTime;
+
+            Advr.Till             = Advr.Till + CompensateTime;
+            Advr.Status           = &quot;Published&quot;;
+        }
+
+        if(Published == false)
+        {
+            require(keccak256(Advr.Status) == keccak256(&quot;Moderate&quot;));
+
+            require(balanceOf[this] &gt;= Advr.SpentTokens);
+
+            balanceOf[Advr.Advertiser] += Advr.SpentTokens;
+            balanceOf[this] -= Advr.SpentTokens;
+            Transfer(this, Advr.Advertiser, Advr.SpentTokens);
+
+            delete Advr.Advertiser;
+            delete Advr.AdvertSrc;
+            delete Advr.Till;
+            delete Advr.AddTime;
+            delete Advr.SpentTokens;
+
+            Advr.Status = &quot;Free&quot;;
+        }
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>Published == false</code></p>
+<hr />
+<h3>Contract : Controller</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x7df79124d71b9cc9d01ff13a15ff5406a158635d">0x7df79124d71b9cc9d01ff13a15ff5406a158635d</a></p>
+<pre><code class="language-solidity">function makeNewGame(
+        address payable _ownerWallet,
+        address payable _contractOwnerWallet,
+        uint _systemOwnerPercent,
+        uint _percentOwner,
+        uint _percentReferrer,
+        uint _percentFundDay, uint _percentFundWeek, uint _percentFundMonth, uint _percentFundYear,
+        address _myAccountToJpFund, address _myAccountToReferFund,
+        bool isMyGame
+    ) public {
+        require(_percentOwner &gt;= _percentReferrer);
+        require(_contractOwnerWallet != address(0));
+        address myGameAddress;
+        if (_systemOwnerPercent &gt; 100) {
+            _systemOwnerPercent = 100;
+        }
+        if (countContractByOwner(owner()) &gt; 0) {
+            myGameAddress = getAddressContract(owner(), indexMyGame);
+        }
+
+        if (isMyGame == true) {
+            require(myGameWhitelist[msg.sender]);
+            _myAccountToJpFund = myGameAddress;
+            _myAccountToReferFund = myGameAddress;
+            _ownerWallet = owner();
+        }
+
+        address payable newContractAddress = headsOrTails.makeNewGame(
+            _ownerWallet,
+            _contractOwnerWallet,
+                _systemOwnerPercent,
+            _percentOwner,
+            _myAccountToJpFund, _myAccountToReferFund
+        );
+
+        if (isMyGame == false) {
+
+            settingJpPercentNewGameContract(
+                newContractAddress, _myAccountToJpFund,
+                _percentFundDay, _percentFundWeek, _percentFundMonth, _percentFundYear
+            );
+            settingReferPercentNewGameContract(
+                newContractAddress, _myAccountToReferFund,
+                _percentReferrer
+            );
+
+            _checkNewOwner(_ownerWallet);
+            _listOfContract[msg.sender].push(newContractAddress);
+        } else {
+            _listOfContract[_ownerWallet].push(newContractAddress);
+            _listOfJoinedMyGame[msg.sender].push(newContractAddress);
+            _getSundayLottery(_ownerWallet, indexMyGame).payToMyGameContract(newContractAddress);
+        }
+
+        _ownerByContract[newContractAddress] = _ownerWallet;
+        fundsStorage.setWhitelist(newContractAddress, true);
+        referStorage.setWhitelist(newContractAddress, true);
+
+        emit MakeNewGameContract(msg.sender, newContractAddress);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>isMyGame == false</code></p>
+<hr />
+<h3>Contract : Auctions</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x06d3e950fe4ced87c7b24e8336b8688ce2c0ca9c">0x06d3e950fe4ced87c7b24e8336b8688ce2c0ca9c</a></p>
+<pre><code class="language-solidity">function setAuctionApproval(uint256 auctionId, bool approved)
+        public
+        override
+        auctionExists(auctionId)
+    {
+        IAuctions.Auction storage auction = auctions[auctionId];
+        address curator = houses[auction.houseId].curator;
+
+        require(
+            curator == msg.sender,
+            &quot;Not auction curator&quot;);
+        require(
+            auction.firstBidTime == 0,
+            &quot;Already started&quot;);
+        require(
+            (approved == true &amp;&amp; auction.approved == false) ||
+            (approved == false &amp;&amp; auction.approved == true),
+            &quot;Already in this state&quot;);
+
+        auction.approved = approved;
+
+        if (approved == true) {
+            _houseAuctions[auction.houseId].add(auctionId);
+            _houseQueue[auction.houseId].remove(auctionId);
+
+            if (_activeHouses.head() != auction.houseId) {
+                if (_activeHouses.contains(auction.houseId)) {
+                    _activeHouses.remove(auction.houseId);
+                }
+                _activeHouses.add(auction.houseId);
+            }
+        }
+
+        emit AuctionApprovalUpdated(
+            auctionId,
+            approved
+        );
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>approved == true</code></p>
+<hr />
+<h3>Contract : Treasury</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x7416033d81115cc3c8a8f97c1aa9dcc187c67af1">0x7416033d81115cc3c8a8f97c1aa9dcc187c67af1</a></p>
+<pre><code class="language-solidity">function setBeneficiary(address a, bool solid, uint amount, uint lastClaim, uint emission) public {
+        require(msg.sender == _governance &amp;&amp; bens[a].solid == false &amp;&amp; amount&lt;=4e22 &amp;&amp; lastClaim &lt; block.number+1e6 &amp;&amp; lastClaim &gt;= 1264e4 &amp;&amp; emission &gt;= 1e2 &amp;&amp; emission &lt;=1e4);
+        if(lastClaim &lt; block.number) {lastClaim = block.number;}
+        if (solid == true) {bens[a].solid = true;}
+        uint lc = bens[a].lastClaim;
+        if (lc == 0) {bens[a].lastClaim = uint32(lastClaim);} //lastClaim can be set to a future block and used as a start block for grant activation
+        if (bens[a].amount == 0 &amp;&amp; lc != 0) {bens[a].lastClaim = uint32(lastClaim);}
+        bens[a].amount = uint88(amount);
+        bens[a].emission = uint16(emission);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>solid == true</code></p>
+<hr />
+<h3>Contract : OasisAuctionHouse</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x9ee81758fe854da0dae1908237554470f7381d46">0x9ee81758fe854da0dae1908237554470f7381d46</a></p>
+<pre><code class="language-solidity">function createBid(uint256 _currentTokenId, bool _standing) external payable nonReentrant  onlyUnpaused {
+
+        // Query the auction state
+        IAuctionHouse.Auction memory _auction = auction;
+
+        // Check that the auction is live
+        require(_currentTokenId == _auction.tokenId, 'Bid on wrong tokenId.');
+        require(block.timestamp &lt; _auction.endTime, &quot;Auction has ended&quot;);
+        require(block.timestamp &gt; _auction.startTime, &quot;Auction has not started&quot;);
+        require(msg.value &gt;= minimumBid, &quot;Bid is too low.&quot;);
+        require(
+            msg.value &gt;= _auction.amount + ((_auction.amount * minBidIncrementPercentage) / 100),
+            &quot;Bid is too low.&quot;
+        );
+
+        // A reference to benchmark the new bid against
+        address payable lastBidder = _auction.bidder;
+
+        // Refund the previous highest bidder,
+        // if not standing bid
+        if (lastBidder != address(0) &amp;&amp; Bids[lastBidder].standing == false &amp;&amp; Bids[lastBidder].refunded == false) {
+            _safeTransferETH(lastBidder, _auction.amount);
+            Bids[lastBidder].refunded = true;
+        }
+
+        // if overbidding self, remove old bid
+        // clear standing bids from same sender
+        if (Bids[msg.sender].refunded == false) {
+            if (Bids[msg.sender].standing == true) {
+                // loop through standing bidders and remove the address
+                for (uint i = 0; i &lt; standingBidders.length; i++) {
+                    if (standingBidders[i] == msg.sender) {
+                        standingBidders[i] = standingBidders[standingBidders.length - 1];
+                        standingBidders.pop();
+                        break;
+                    }
+                }
+            }
+            _safeTransferETH(msg.sender, Bids[msg.sender].amount);
+            Bids[msg.sender].refunded = true;
+        }
+
+        Bid memory new_bid;
+        new_bid.bidder = payable(msg.sender);
+        new_bid.amount = msg.value;
+        new_bid.timestamp = block.timestamp;
+        new_bid.winner = false;
+        new_bid.refunded = false;
+        new_bid.standing = _standing;
+        Bids[msg.sender] = new_bid;
+
+        if (_standing == true) {
+            standingBidders.push(msg.sender);
+        }
+
+        // Update the auction state with the new bid bidder and the new amount
+        auction.bidder = payable(msg.sender);
+        auction.amount = msg.value;
+
+
+        // Extend the auction if the bid was received within the time buffer
+        bool extended = _auction.endTime - block.timestamp &lt; timeBuffer;
+        if (extended) {
+            auction.endTime = _auction.endTime = _auction.endTime + timeBuffer;
+            auction.extendedTime = _auction.extendedTime + timeBuffer;
+        }
+
+        emit AuctionBid(currentTokenId, msg.sender, Bids[msg.sender].amount, _standing, extended, false);
+
+        if (extended) {
+            emit AuctionExtended(currentTokenId, _auction.endTime);
+        }
+
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>_standing == true</code></p>
+<hr />
+<h3>Contract : Auctions</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0xc71f367cd67788771b7edef9498f699a473ae92c">0xc71f367cd67788771b7edef9498f699a473ae92c</a></p>
+<pre><code class="language-solidity">function setAuctionApproval(uint256 auctionId, bool approved)
+        external
+        override
+        auctionExists(auctionId)
+    {
+        IAuctions.Auction storage auction = auctions[auctionId];
+        address curator = houses[auction.houseId].curator;
+
+        require(
+            curator != address(0) &amp;&amp; curator == msg.sender,
+            &quot;Must be auction curator&quot;);
+        require(
+            auction.firstBidTime == 0,
+            &quot;Auction has already started&quot;);
+        require(
+            (approved == true &amp;&amp; auction.approved == false) ||
+            (approved == false &amp;&amp; auction.approved == true),
+            &quot;Auction already in this approved state&quot;);
+
+        auction.approved = approved;
+
+        if (approved == true) {
+            _houseAuctions[auction.houseId].add(auctionId);
+            _houseQueue[auction.houseId].remove(auctionId);
+        }
+
+        emit AuctionApprovalUpdated(
+            auctionId,
+            approved
+        );
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>approved == true</code></p>
+<hr />
+<h3>Contract : Treasury</h3>
+<p><strong>Address:</strong> <a href="https://etherscan.io/address/0x4c26f6b312dc664e48727a9391ed0578cf3286fe">0x4c26f6b312dc664e48727a9391ed0578cf3286fe</a></p>
+<pre><code class="language-solidity">function setBeneficiary(address a, bool solid, uint amount, uint lastClaim, uint emission) public {
+        require(msg.sender == _governance &amp;&amp; bens[a].solid == false &amp;&amp; amount&lt;=4e22 &amp;&amp; lastClaim &lt; block.number+1e6 &amp;&amp; emission &gt;= 1e2 &amp;&amp; emission &lt;=1e4);
+        if(lastClaim &lt; block.number) {lastClaim = block.number;}
+        if(lastClaim &lt; 12510400) {lastClaim = 12510400;}
+        if(lastClaim &gt; 12510400 &amp;&amp; lastClaim &lt; 1264e4) {lastClaim = 1264e4;}//so it adds even more convenience
+        if (solid == true) {bens[a].solid = true;}
+        uint lc = bens[a].lastClaim;
+        if (lc == 0) {bens[a].lastClaim = uint32(lastClaim+129600);} // this 3 weeks delay disallows deployer to be malicious, can be removed after the governance will have control over treasury
+        if (bens[a].amount == 0 &amp;&amp; lc != 0) {bens[a].lastClaim = uint32(lastClaim);}
+        bens[a].amount = uint88(amount);
+        bens[a].emission = uint16(emission);
+    }
+</code></pre>
+<p><strong>Vulnerable If Instruction:</strong> <code>solid == true</code></p>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Wrap instruction text in code tags
+        document.querySelectorAll('.instruction').forEach(function(el) {
+            var text = el.textContent;
+            var match = text.match(/^Instruction:\s*(.*)/);
+            if (match) {
+                el.innerHTML = 'Instruction: <code>' + match[1].replace(/`/g, '') + '</code>';
+            }
+        });
+
+        // Apply Prism.js highlighting
+        Prism.highlightAll();
+    </script>
+</body>
+</html>
